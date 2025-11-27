@@ -96,11 +96,11 @@ export default function Home() {
           <p>
             Ready to start your project? Contact us for a free estimate.
           </p>
-          <form className={styles.contactForm}>
-            <input type="text" placeholder="Your Name" required />
-            <input type="email" placeholder="Your Email" required />
-            <input type="tel" placeholder="Phone Number" />
-            <textarea placeholder="Describe your project..." rows={4}></textarea>
+          <form className={styles.contactForm} action="#" method="POST">
+            <input type="text" name="name" placeholder="Your Name" required />
+            <input type="email" name="email" placeholder="Your Email" required />
+            <input type="tel" name="phone" placeholder="Phone Number" />
+            <textarea name="description" placeholder="Describe your project..." rows={4}></textarea>
             <button type="submit" className={styles.submitButton}>
               Request Quote
             </button>
