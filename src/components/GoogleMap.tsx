@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useState } from 'react';
 import { HydroVacCompany, DisposalFacility, FilterType, HYDROVAC_PIN_COLORS, DISPOSAL_PIN_COLOR } from '@/types';
 import styles from './GoogleMap.module.css';
 
@@ -8,203 +8,200 @@ interface GoogleMapProps {
   companies: HydroVacCompany[];
   facilities: DisposalFacility[];
   activeFilter: FilterType;
-  center?: { lat: number; lng: number };
-  zoom?: number;
+}
+
+// Convert lat/lng to x/y position on the map (approximate US bounds)
+function latLngToPosition(lat: number, lng: number): { x: number; y: number } {
+  // US bounds approximately: lat 24-50, lng -125 to -66
+  const minLat = 24;
+  const maxLat = 50;
+  const minLng = -125;
+  const maxLng = -66;
+  
+  const x = ((lng - minLng) / (maxLng - minLng)) * 100;
+  const y = ((maxLat - lat) / (maxLat - minLat)) * 100;
+  
+  return { x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) };
+}
+
+interface TooltipData {
+  type: 'company' | 'facility';
+  name: string;
+  location: string;
+  phone: string;
+  details: string;
+  website?: string;
+  address?: string;
+  tier: string;
 }
 
 export default function GoogleMap({ 
   companies, 
   facilities, 
   activeFilter,
-  center = { lat: 39.8283, lng: -98.5795 }, // Center of US
-  zoom = 4
 }: GoogleMapProps) {
-  const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<google.maps.Map | null>(null);
-  const markersRef = useRef<google.maps.Marker[]>([]);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [hoveredItem, setHoveredItem] = useState<TooltipData | null>(null);
+  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
 
-  // Update markers function
-  const updateMarkers = useCallback(() => {
-    const map = mapInstanceRef.current;
-    if (!map || typeof window === 'undefined' || !window.google) return;
-
-    // Clear existing markers
-    markersRef.current.forEach(marker => marker.setMap(null));
-    markersRef.current = [];
-
-    // Add company markers
-    if (activeFilter === 'all' || activeFilter === 'hydrovac') {
-      companies.forEach(company => {
-        const marker = new window.google.maps.Marker({
-          position: { lat: company.latitude, lng: company.longitude },
-          map,
-          title: company.name,
-          icon: {
-            path: window.google.maps.SymbolPath.CIRCLE,
-            scale: 10,
-            fillColor: HYDROVAC_PIN_COLORS[company.tier],
-            fillOpacity: 1,
-            strokeColor: '#ffffff',
-            strokeWeight: 2,
-          }
-        });
-
-        const infoWindow = new window.google.maps.InfoWindow({
-          content: `
-            <div style="padding: 8px; max-width: 250px;">
-              <h3 style="margin: 0 0 8px 0; font-size: 14px;">${company.name}</h3>
-              <p style="margin: 0 0 4px 0; font-size: 12px; color: #666;">${company.city}, ${company.state}</p>
-              <p style="margin: 0 0 8px 0; font-size: 12px;">${company.phone}</p>
-              <a href="tel:${company.phone.replace(/\D/g, '')}" style="display: inline-block; padding: 6px 12px; background: #22c55e; color: white; text-decoration: none; border-radius: 4px; font-size: 12px; margin-right: 8px;">Call Now</a>
-              <a href="${company.website}" target="_blank" style="display: inline-block; padding: 6px 12px; background: #1e40af; color: white; text-decoration: none; border-radius: 4px; font-size: 12px;">Website</a>
-            </div>
-          `
-        });
-
-        marker.addListener('click', () => {
-          infoWindow.open(map, marker);
-        });
-
-        markersRef.current.push(marker);
+  const handleMouseEnter = (data: TooltipData, e: React.MouseEvent) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const parentRect = e.currentTarget.closest(`.${styles.mapContainer}`)?.getBoundingClientRect();
+    if (parentRect) {
+      setTooltipPosition({
+        x: rect.left - parentRect.left + rect.width / 2,
+        y: rect.top - parentRect.top
       });
     }
+    setHoveredItem(data);
+  };
 
-    // Add facility markers
-    if (activeFilter === 'all' || activeFilter === 'disposal') {
-      facilities.forEach(facility => {
-        const marker = new window.google.maps.Marker({
-          position: { lat: facility.latitude, lng: facility.longitude },
-          map,
-          title: facility.name,
-          icon: {
-            path: window.google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
-            scale: 8,
-            fillColor: DISPOSAL_PIN_COLOR,
-            fillOpacity: 1,
-            strokeColor: '#ffffff',
-            strokeWeight: 2,
-          }
-        });
+  const handleMouseLeave = () => {
+    setHoveredItem(null);
+  };
 
-        const infoWindow = new window.google.maps.InfoWindow({
-          content: `
-            <div style="padding: 8px; max-width: 280px;">
-              <h3 style="margin: 0 0 8px 0; font-size: 14px;">${facility.name}</h3>
-              <p style="margin: 0 0 4px 0; font-size: 12px; color: #666;">${facility.address}, ${facility.city}, ${facility.state}</p>
-              <p style="margin: 0 0 4px 0; font-size: 12px;">${facility.hours}</p>
-              <p style="margin: 0 0 8px 0; font-size: 12px;">${facility.phone}</p>
-              <a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${facility.address}, ${facility.city}, ${facility.state}`)}" target="_blank" style="display: inline-block; padding: 6px 12px; background: #1e40af; color: white; text-decoration: none; border-radius: 4px; font-size: 12px;">Get Directions</a>
-            </div>
-          `
-        });
-
-        marker.addListener('click', () => {
-          infoWindow.open(map, marker);
-        });
-
-        markersRef.current.push(marker);
-      });
-    }
-  }, [companies, facilities, activeFilter]);
-
-  // Load Google Maps script
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    
-    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-    if (!apiKey) {
-      return;
-    }
-
-    // Check if Google Maps is already loaded
-    const checkGoogleMaps = () => {
-      if (window.google && window.google.maps) {
-        setIsLoaded(true);
-        return true;
-      }
-      return false;
-    };
-
-    if (checkGoogleMaps()) return;
-
-    // Check if script is already being loaded
-    const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
-    if (existingScript) {
-      existingScript.addEventListener('load', () => setIsLoaded(true));
-      return;
-    }
-
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}`;
-    script.async = true;
-    script.defer = true;
-    
-    script.onload = () => {
-      setIsLoaded(true);
-    };
-
-    document.head.appendChild(script);
-
-    return () => {
-      if (script.parentNode) {
-        document.head.removeChild(script);
-      }
-    };
-  }, []);
-
-  // Initialize map
-  useEffect(() => {
-    if (!isLoaded || !mapRef.current || mapInstanceRef.current) return;
-    if (typeof window === 'undefined' || !window.google) return;
-
-    const newMap = new window.google.maps.Map(mapRef.current, {
-      center,
-      zoom,
-      styles: [
-        {
-          featureType: 'poi',
-          elementType: 'labels',
-          stylers: [{ visibility: 'off' }]
-        }
-      ]
-    });
-
-    mapInstanceRef.current = newMap;
-    updateMarkers();
-  }, [isLoaded, center, zoom, updateMarkers]);
-
-  // Update markers when filter changes
-  useEffect(() => {
-    if (mapInstanceRef.current) {
-      updateMarkers();
-    }
-  }, [activeFilter, updateMarkers]);
-
-  if (!process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY) {
-    return (
-      <div className={styles.mapPlaceholder}>
-        <div className={styles.mapOverlay}>
-          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-            <circle cx="12" cy="10" r="3" />
-          </svg>
-          <p>Interactive Map</p>
-          <span>United States & Canada Coverage</span>
-          <small>Add NEXT_PUBLIC_GOOGLE_MAPS_API_KEY to enable Google Maps</small>
-        </div>
-      </div>
-    );
-  }
+  const filteredCompanies = activeFilter === 'disposal' ? [] : companies;
+  const filteredFacilities = activeFilter === 'hydrovac' ? [] : facilities;
 
   return (
-    <div className={styles.mapWrapper}>
-      <div ref={mapRef} className={styles.map} />
-      {!isLoaded && (
-        <div className={styles.loading}>
-          <span>Loading map...</span>
+    <div className={styles.mapContainer}>
+      <div className={styles.mapWrapper}>
+        {/* US Map Background */}
+        <div className={styles.mapBackground}>
+          <svg viewBox="0 0 960 600" className={styles.usSvg}>
+            {/* Simplified US outline */}
+            <path
+              d="M158 453 L165 428 L190 405 L230 395 L280 380 L310 365 L345 355 L380 340 L420 330 L460 325 L500 315 L540 305 L580 300 L620 295 L660 290 L700 288 L740 290 L780 295 L820 305 L850 320 L870 340 L885 365 L890 390 L885 420 L870 450 L845 475 L810 495 L770 510 L725 520 L680 525 L635 528 L590 530 L545 528 L500 525 L455 520 L410 515 L365 508 L320 500 L280 490 L245 478 L210 468 L175 460 Z M730 150 L755 140 L785 145 L810 165 L825 195 L830 230 L822 265 L805 295 L780 318 L750 335 L715 345 L680 348 L645 345 L615 335 L590 318 L572 295 L562 265 L560 230 L568 195 L585 165 L612 145 L645 138 L680 140 L710 148 Z"
+              fill="#e2e8f0"
+              stroke="#cbd5e1"
+              strokeWidth="2"
+            />
+            {/* State boundaries simplified */}
+            <path
+              d="M300 450 L300 380 L400 380 L400 450 M400 380 L500 380 L500 450 L400 450 M500 380 L600 380 L600 450 L500 450 M300 380 L300 300 L400 300 L400 380 M400 300 L500 300 L500 380 M500 300 L600 300 L600 380 M600 300 L700 300 L700 380 L600 380 M300 300 L300 220 L400 220 L400 300 M400 220 L500 220 L500 300 M500 220 L600 220 L600 300 M600 220 L700 220 L700 300"
+              fill="none"
+              stroke="#cbd5e1"
+              strokeWidth="1"
+              opacity="0.5"
+            />
+          </svg>
         </div>
-      )}
+        
+        {/* Pins Container */}
+        <div className={styles.pinsContainer}>
+          {/* Company Pins */}
+          {filteredCompanies.map((company) => {
+            const pos = latLngToPosition(company.latitude, company.longitude);
+            return (
+              <div
+                key={company.id}
+                className={styles.pin}
+                style={{
+                  left: `${pos.x}%`,
+                  top: `${pos.y}%`,
+                  backgroundColor: HYDROVAC_PIN_COLORS[company.tier],
+                }}
+                onMouseEnter={(e) => handleMouseEnter({
+                  type: 'company',
+                  name: company.name,
+                  location: `${company.city}, ${company.state}`,
+                  phone: company.phone,
+                  details: company.serviceSpecialties.slice(0, 2).join(', '),
+                  website: company.website,
+                  tier: company.tier,
+                }, e)}
+                onMouseLeave={handleMouseLeave}
+              >
+                <svg viewBox="0 0 24 24" fill="currentColor" className={styles.pinIcon}>
+                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                </svg>
+              </div>
+            );
+          })}
+          
+          {/* Facility Pins */}
+          {filteredFacilities.map((facility) => {
+            const pos = latLngToPosition(facility.latitude, facility.longitude);
+            return (
+              <div
+                key={facility.id}
+                className={`${styles.pin} ${styles.facilityPin}`}
+                style={{
+                  left: `${pos.x}%`,
+                  top: `${pos.y}%`,
+                  backgroundColor: DISPOSAL_PIN_COLOR,
+                }}
+                onMouseEnter={(e) => handleMouseEnter({
+                  type: 'facility',
+                  name: facility.name,
+                  location: `${facility.city}, ${facility.state}`,
+                  phone: facility.phone,
+                  details: facility.hours,
+                  address: facility.address,
+                  tier: 'verified',
+                }, e)}
+                onMouseLeave={handleMouseLeave}
+              >
+                <svg viewBox="0 0 24 24" fill="currentColor" className={styles.pinIcon}>
+                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                </svg>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Tooltip */}
+        {hoveredItem && (
+          <div 
+            className={styles.tooltip}
+            style={{
+              left: `${tooltipPosition.x}px`,
+              top: `${tooltipPosition.y - 10}px`,
+            }}
+          >
+            <div className={styles.tooltipHeader}>
+              <span className={styles.tooltipName}>{hoveredItem.name}</span>
+              <span 
+                className={styles.tooltipTier}
+                style={{ 
+                  backgroundColor: hoveredItem.type === 'company' 
+                    ? HYDROVAC_PIN_COLORS[hoveredItem.tier as keyof typeof HYDROVAC_PIN_COLORS] 
+                    : DISPOSAL_PIN_COLOR 
+                }}
+              >
+                {hoveredItem.tier}
+              </span>
+            </div>
+            <div className={styles.tooltipLocation}>{hoveredItem.location}</div>
+            <div className={styles.tooltipPhone}>{hoveredItem.phone}</div>
+            <div className={styles.tooltipDetails}>{hoveredItem.details}</div>
+            <div className={styles.tooltipActions}>
+              <a href={`tel:${hoveredItem.phone.replace(/\D/g, '')}`} className={styles.tooltipBtn}>
+                Call Now
+              </a>
+              {hoveredItem.website && (
+                <a href={hoveredItem.website} target="_blank" rel="noopener noreferrer" className={styles.tooltipBtnSecondary}>
+                  Website
+                </a>
+              )}
+              {hoveredItem.address && (
+                <a 
+                  href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${hoveredItem.address}, ${hoveredItem.location}`)}`} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className={styles.tooltipBtnSecondary}
+                >
+                  Directions
+                </a>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Map Info */}
+        <div className={styles.mapInfo}>
+          <span>{filteredCompanies.length + filteredFacilities.length} locations shown</span>
+        </div>
+      </div>
     </div>
   );
 }
