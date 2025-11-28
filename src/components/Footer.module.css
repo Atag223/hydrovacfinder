@@ -36,6 +36,10 @@
   font-size: 1.5rem;
 }
 
+.logoImage {
+  border-radius: 4px;
+}
+
 .logoText {
   color: white;
 }

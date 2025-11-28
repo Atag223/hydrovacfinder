@@ -1,0 +1,77 @@
+.mapWrapper {
+  position: relative;
+  height: 450px;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.map {
+  width: 100%;
+  height: 100%;
+}
+
+.loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(145deg, #e8f4f8 0%, #d1e8ed 100%);
+}
+
+.loading span {
+  font-size: 1rem;
+  color: var(--gray-600);
+}
+
+.mapPlaceholder {
+  position: relative;
+  height: 450px;
+  background: linear-gradient(145deg, #e8f4f8 0%, #d1e8ed 100%);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.mapOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--gray-500);
+  text-align: center;
+  padding: 2rem;
+}
+
+.mapOverlay svg {
+  margin-bottom: 1rem;
+  color: var(--primary);
+}
+
+.mapOverlay p {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--gray-700);
+  margin-bottom: 0.5rem;
+}
+
+.mapOverlay span {
+  font-size: 1rem;
+  color: var(--gray-500);
+  margin-bottom: 0.5rem;
+}
+
+.mapOverlay small {
+  font-size: 0.8125rem;
+  color: var(--gray-400);
+}
+
+@media (max-width: 768px) {
+  .mapWrapper,
+  .mapPlaceholder {
+    height: 300px;
+  }
+}

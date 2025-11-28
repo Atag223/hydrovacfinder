@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import styles from './Footer.module.css';
 
 export default function Footer() {
@@ -8,7 +9,7 @@ export default function Footer() {
         <div className={styles.main}>
           <div className={styles.brand}>
             <Link href="/" className={styles.logo}>
-              <span className={styles.logoIcon}>🚚</span>
+              <Image src="/logo.png" alt="HydroVacFinder" width={32} height={32} className={styles.logoImage} />
               <span className={styles.logoText}>HydroVacFinder.com</span>
             </Link>
             <p className={styles.tagline}>

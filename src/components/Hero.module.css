@@ -6,18 +6,14 @@
   align-items: center;
   justify-content: center;
   padding: 6rem 1rem 4rem;
-  background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 50%, #1e3a5f 100%);
-  background-size: cover;
-  background-position: center;
+  background: url('/hero-bg.png') center/cover no-repeat;
   margin-top: 64px;
 }
 
 .overlay {
   position: absolute;
   inset: 0;
-  background: url('/hero-bg.jpg') center/cover no-repeat;
-  opacity: 0.3;
-  mix-blend-mode: overlay;
+  background: linear-gradient(135deg, rgba(30, 58, 95, 0.75) 0%, rgba(45, 90, 135, 0.65) 50%, rgba(30, 58, 95, 0.75) 100%);
 }
 
 .content {

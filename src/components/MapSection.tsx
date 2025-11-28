@@ -1,21 +1,26 @@
 'use client';
 
 import { useState } from 'react';
-import { SearchRadius, FilterType } from '@/types';
+import { SearchRadius, FilterType, HydroVacCompany, DisposalFacility } from '@/types';
+import GoogleMap from './GoogleMap';
 import styles from './MapSection.module.css';
 
 interface MapSectionProps {
   activeFilter: FilterType;
   onFilterChange: (filter: FilterType) => void;
+  companies: HydroVacCompany[];
+  facilities: DisposalFacility[];
 }
 
-export default function MapSection({ activeFilter, onFilterChange }: MapSectionProps) {
+export default function MapSection({ activeFilter, onFilterChange, companies, facilities }: MapSectionProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchRadius, setSearchRadius] = useState<SearchRadius>(50);
   const [isLocating, setIsLocating] = useState(false);
+  const [locationError, setLocationError] = useState('');
 
   const handleUseLocation = () => {
     setIsLocating(true);
+    setLocationError('');
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -25,12 +30,12 @@ export default function MapSection({ activeFilter, onFilterChange }: MapSectionP
         (error) => {
           console.error('Geolocation error:', error);
           setIsLocating(false);
-          alert('Unable to get your location. Please enter a location manually.');
+          setLocationError('Unable to get your location. Please enter a location manually.');
         }
       );
     } else {
       setIsLocating(false);
-      alert('Geolocation is not supported by your browser.');
+      setLocationError('Geolocation is not supported by your browser.');
     }
   };
 
@@ -88,6 +93,7 @@ export default function MapSection({ activeFilter, onFilterChange }: MapSectionP
               Search
             </button>
           </form>
+          {locationError && <p className={styles.errorMessage}>{locationError}</p>}
         </div>
 
         {/* Map Legend */}
@@ -124,19 +130,13 @@ export default function MapSection({ activeFilter, onFilterChange }: MapSectionP
           </div>
         </div>
 
-        {/* Interactive Map Placeholder */}
+        {/* Interactive Google Map */}
         <div className={styles.mapContainer}>
-          <div className={styles.mapPlaceholder}>
-            <div className={styles.mapOverlay}>
-              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                <circle cx="12" cy="10" r="3" />
-              </svg>
-              <p>Interactive Map</p>
-              <span>United States & Canada Coverage</span>
-              <small>Map integration with Leaflet or Google Maps would be implemented here</small>
-            </div>
-          </div>
+          <GoogleMap 
+            companies={companies}
+            facilities={facilities}
+            activeFilter={activeFilter}
+          />
         </div>
 
         {/* Filter Tabs */}

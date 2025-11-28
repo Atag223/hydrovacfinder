@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import styles from './Navigation.module.css';
 
 interface NavigationProps {
@@ -15,7 +16,7 @@ export default function Navigation({ isAdmin = false }: NavigationProps) {
     <nav className={styles.nav}>
       <div className={styles.container}>
         <Link href="/" className={styles.logo}>
-          <span className={styles.logoIcon}>🚚</span>
+          <Image src="/logo.png" alt="HydroVacFinder" width={40} height={40} className={styles.logoImage} />
           <span className={styles.logoText}>HydroVacFinder</span>
         </Link>
 

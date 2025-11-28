@@ -19,7 +19,9 @@ export default function Home() {
         <Hero />
         <MapSection 
           activeFilter={activeFilter} 
-          onFilterChange={setActiveFilter} 
+          onFilterChange={setActiveFilter}
+          companies={mockHydroVacCompanies}
+          facilities={mockDisposalFacilities}
         />
         <Listings 
           companies={mockHydroVacCompanies} 
