@@ -200,7 +200,7 @@ export default function Home() {
               <a href="mailto:info@hydrovacfinder.com">info@hydrovacfinder.com</a>
             </p>
             <p>
-              <a href="tel:475-339-6004">Phone: 475-339-6004</a>
+              <a href="tel:574-339-6004">Phone: 574-339-6004</a>
             </p>
           </div>
         </div>
