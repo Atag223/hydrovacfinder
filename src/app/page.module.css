@@ -1,141 +1,385 @@
 .page {
-  --background: #fafafa;
-  --foreground: #fff;
-
-  --text-primary: #000;
-  --text-secondary: #666;
-
-  --button-primary-hover: #383838;
-  --button-secondary-hover: #f2f2f2;
-  --button-secondary-border: #ebebeb;
-
-  display: flex;
   min-height: 100vh;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-geist-sans);
-  background-color: var(--background);
-}
-
-.main {
-  display: flex;
-  min-height: 100vh;
-  width: 100%;
-  max-width: 800px;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: space-between;
-  background-color: var(--foreground);
-  padding: 120px 60px;
-}
-
-.intro {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  text-align: left;
-  gap: 24px;
 }
 
-.intro h1 {
-  max-width: 320px;
-  font-size: 40px;
-  font-weight: 600;
-  line-height: 48px;
-  letter-spacing: -2.4px;
-  text-wrap: balance;
-  color: var(--text-primary);
+/* Header */
+.header {
+  background: var(--primary-color);
+  color: white;
+  padding: 16px 24px;
+  text-align: center;
 }
 
-.intro p {
-  max-width: 440px;
-  font-size: 18px;
-  line-height: 32px;
-  text-wrap: balance;
-  color: var(--text-secondary);
+.headerContent {
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
-.intro a {
-  font-weight: 500;
-  color: var(--text-primary);
+.logo {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0;
 }
 
-.ctas {
-  display: flex;
-  flex-direction: row;
-  width: 100%;
-  max-width: 440px;
-  gap: 16px;
+.tagline {
   font-size: 14px;
+  opacity: 0.9;
+  margin-top: 4px;
 }
 
-.ctas a {
+/* Hero Section */
+.hero {
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+  color: white;
+  padding: 80px 24px;
+  text-align: center;
+}
+
+.heroContent {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.heroTitle {
+  font-size: 48px;
+  font-weight: 700;
+  margin-bottom: 24px;
+  line-height: 1.2;
+}
+
+.heroSubtitle {
+  font-size: 20px;
+  line-height: 1.6;
+  opacity: 0.95;
+  max-width: 700px;
+  margin: 0 auto 32px;
+}
+
+.heroMission {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 24px;
+  border-radius: 12px;
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+/* Search Section */
+.searchSection {
+  background: #f8fafc;
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.searchContent {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.searchTitle {
+  font-size: 28px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: var(--foreground);
+}
+
+.searchDescription {
+  color: var(--text-light);
+  margin-bottom: 24px;
+  font-size: 16px;
+}
+
+.searchFilters {
   display: flex;
+  gap: 16px;
   justify-content: center;
-  align-items: center;
-  height: 40px;
-  padding: 0 16px;
-  border-radius: 128px;
-  border: 1px solid transparent;
-  transition: 0.2s;
-  cursor: pointer;
-  width: fit-content;
-  font-weight: 500;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
 }
 
-a.primary {
-  background: var(--text-primary);
-  color: var(--background);
+.filterButton {
+  padding: 12px 24px;
+  border: 2px solid var(--primary-color);
+  border-radius: 8px;
+  background: white;
+  color: var(--primary-color);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filterButton:hover,
+.filterButtonActive {
+  background: var(--primary-color);
+  color: white;
+}
+
+.radiusOptions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.radiusButton {
+  padding: 8px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  background: white;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* Content Sections */
+.section {
+  padding: 64px 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.sectionTitle {
+  font-size: 32px;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 16px;
+  color: var(--foreground);
+}
+
+.sectionSubtitle {
+  text-align: center;
+  color: var(--text-light);
+  margin-bottom: 48px;
+  font-size: 18px;
+}
+
+/* Listings Grid */
+.listingsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 32px;
+}
+
+.listingCard {
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 32px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.listingCardTitle {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: var(--foreground);
+}
+
+.tierList {
+  list-style: none;
+  margin-bottom: 24px;
+}
+
+.tierList li {
+  padding: 8px 0;
+  display: flex;
+  align-items: center;
   gap: 8px;
 }
 
-a.secondary {
-  border-color: var(--button-secondary-border);
+.tierBadge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
 }
 
-/* Enable hover only on non-touch devices */
-@media (hover: hover) and (pointer: fine) {
-  a.primary:hover {
-    background: var(--button-primary-hover);
-    border-color: transparent;
-  }
-
-  a.secondary:hover {
-    background: var(--button-secondary-hover);
-    border-color: transparent;
-  }
+.tierPremium {
+  background: var(--premium-color);
+  color: #1a1a1a;
 }
 
-@media (max-width: 600px) {
-  .main {
-    padding: 48px 24px;
-  }
+.tierFeatured {
+  background: var(--featured-color);
+}
 
-  .intro {
-    gap: 16px;
-  }
+.tierVerified {
+  background: var(--verified-color);
+}
 
-  .intro h1 {
+.listingDetails {
+  color: var(--text-light);
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+/* Packages Section */
+.packagesSection {
+  background: #f8fafc;
+  padding: 64px 24px;
+}
+
+.packagesContent {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.packagesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  margin-top: 48px;
+}
+
+.packageCard {
+  background: white;
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  padding: 32px;
+  text-align: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.packageCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.packageCardPremium {
+  border-color: var(--premium-color);
+}
+
+.packageCardFeatured {
+  border-color: var(--featured-color);
+}
+
+.packageName {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.packagePrice {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+.packagePriceSmall {
+  font-size: 14px;
+  color: var(--text-light);
+  margin-bottom: 16px;
+}
+
+.packageFeatures {
+  list-style: none;
+  text-align: left;
+  margin-top: 24px;
+}
+
+.packageFeatures li {
+  padding: 8px 0;
+  color: var(--text-light);
+  font-size: 14px;
+}
+
+.packageFeatures li::before {
+  content: "✓";
+  color: var(--verified-color);
+  margin-right: 8px;
+  font-weight: bold;
+}
+
+/* Referral Section */
+.referralSection {
+  background: linear-gradient(135deg, var(--secondary-color), #ea580c);
+  color: white;
+  padding: 64px 24px;
+  text-align: center;
+}
+
+.referralContent {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.referralTitle {
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.referralAmount {
+  font-size: 48px;
+  font-weight: 700;
+  margin: 24px 0;
+}
+
+.referralDescription {
+  font-size: 18px;
+  opacity: 0.95;
+}
+
+/* Footer */
+.footer {
+  background: #1a1a1a;
+  color: white;
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.footerContent {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.footerLogo {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.footerTagline {
+  font-size: 14px;
+  opacity: 0.8;
+  margin-bottom: 32px;
+}
+
+.footerContact {
+  font-size: 14px;
+  opacity: 0.8;
+  line-height: 2;
+}
+
+.footerContact a {
+  color: var(--secondary-color);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .heroTitle {
     font-size: 32px;
-    line-height: 40px;
-    letter-spacing: -1.92px;
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  .logo {
-    filter: invert();
   }
 
-  .page {
-    --background: #000;
-    --foreground: #000;
+  .heroSubtitle {
+    font-size: 16px;
+  }
 
-    --text-primary: #ededed;
-    --text-secondary: #999;
+  .sectionTitle {
+    font-size: 24px;
+  }
 
-    --button-primary-hover: #ccc;
-    --button-secondary-hover: #1a1a1a;
-    --button-secondary-border: #1a1a1a;
+  .listingsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .packagesGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .referralAmount {
+    font-size: 36px;
   }
 }
