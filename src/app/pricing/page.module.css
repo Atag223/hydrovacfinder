@@ -1,0 +1,323 @@
+.main {
+  padding-top: 64px;
+  min-height: 100vh;
+  background: var(--gray-50);
+}
+
+.hero {
+  text-align: center;
+  padding: 4rem 1rem;
+  background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+  color: white;
+}
+
+.title {
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 800;
+  margin-bottom: 1rem;
+}
+
+.subtitle {
+  font-size: 1.125rem;
+  opacity: 0.9;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.section {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 3rem 1rem;
+}
+
+.sectionTitle {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--gray-900);
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+/* Pricing Grid */
+.pricingGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.pricingCard {
+  position: relative;
+  background: white;
+  border-radius: 1rem;
+  padding: 2rem;
+  border: 1px solid var(--gray-200);
+  transition: all 0.3s ease;
+}
+
+.pricingCard:hover {
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+  transform: translateY(-4px);
+}
+
+.pricingCard.popular {
+  border: 2px solid var(--tier-featured);
+  box-shadow: 0 8px 24px rgba(34, 197, 94, 0.15);
+}
+
+.popularBadge {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.375rem 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: white;
+  background: var(--tier-featured);
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.pinIndicator {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+}
+
+.planName {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--gray-900);
+}
+
+.pricing {
+  margin-bottom: 1.5rem;
+}
+
+.priceRow {
+  display: flex;
+  align-items: baseline;
+  gap: 0.25rem;
+}
+
+.price {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--gray-900);
+}
+
+.period {
+  font-size: 1rem;
+  color: var(--gray-500);
+}
+
+.yearlyPrice {
+  font-size: 0.875rem;
+  color: var(--gray-500);
+  margin-top: 0.25rem;
+}
+
+.features {
+  list-style: none;
+  margin-bottom: 1.5rem;
+}
+
+.feature {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  font-size: 0.9375rem;
+  color: var(--gray-600);
+}
+
+.feature svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--success);
+}
+
+.ctaButton {
+  width: 100%;
+  padding: 0.875rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: white;
+  background: var(--primary);
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.ctaButton:hover {
+  background: var(--primary-dark);
+}
+
+.ctaButtonGold {
+  composes: ctaButton;
+  background: var(--tier-premium);
+  color: var(--gray-900);
+}
+
+.ctaButtonGold:hover {
+  background: #ca8a04;
+}
+
+.ctaButtonGreen {
+  composes: ctaButton;
+  background: var(--tier-featured);
+}
+
+.ctaButtonGreen:hover {
+  background: #16a34a;
+}
+
+/* Special Cards */
+.specialCard {
+  background: white;
+  border-radius: 1rem;
+  padding: 2.5rem;
+  border: 1px solid var(--gray-200);
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.specialContent {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2rem;
+  align-items: center;
+}
+
+.specialTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin-bottom: 0.75rem;
+}
+
+.specialDesc {
+  font-size: 1rem;
+  color: var(--gray-600);
+  margin-bottom: 1.5rem;
+  max-width: 400px;
+}
+
+.specialFeatures {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+}
+
+.specialFeatures li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--gray-600);
+}
+
+.specialFeatures svg {
+  color: var(--success);
+  flex-shrink: 0;
+}
+
+.specialPricing {
+  text-align: center;
+}
+
+.specialPrice {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--gray-900);
+}
+
+.specialPeriod {
+  font-size: 1rem;
+  color: var(--gray-500);
+  display: block;
+  margin-bottom: 1rem;
+}
+
+/* Referral Card */
+.referralCard {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-radius: 1rem;
+  padding: 3rem;
+  text-align: center;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.referralContent {
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.referralIcon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.referralTitle {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin-bottom: 1rem;
+}
+
+.referralDesc {
+  font-size: 1rem;
+  color: var(--gray-700);
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+/* Payment Info */
+.paymentInfo {
+  text-align: center;
+  padding: 2rem 1rem 4rem;
+}
+
+.paymentInfo p {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.9375rem;
+  color: var(--gray-500);
+}
+
+@media (max-width: 768px) {
+  .pricingGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .specialContent {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .specialDesc {
+    max-width: none;
+  }
+
+  .specialFeatures {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+
+  .specialPricing {
+    margin-top: 1.5rem;
+  }
+}
