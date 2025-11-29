@@ -158,8 +158,12 @@
   background: var(--tier-verified);
 }
 
+.pinRed {
+  background: #EF4444;
+}
+
 .pinGreen {
-  background: var(--tier-featured);
+  background: #22C55E;
 }
 
 .pinGold {
