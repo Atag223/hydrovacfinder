@@ -37,8 +37,8 @@ export default function Footer() {
               <a href="mailto:info@hydrovacfinder.com" className={styles.link}>
                 info@hydrovacfinder.com
               </a>
-              <a href="tel:+18005551234" className={styles.link}>
-                1-800-555-1234
+              <a href="tel:+15743396004" className={styles.link}>
+                574-339-6004
               </a>
             </div>
           </div>
