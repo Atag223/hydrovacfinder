@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Navigation from '@/components/Navigation';
@@ -8,7 +8,7 @@ import Footer from '@/components/Footer';
 import styles from './page.module.css';
 import { US_STATES } from '@/types';
 
-export default function StateDirectoryPage() {
+function StateDirectoryContent() {
   const searchParams = useSearchParams();
   const type = searchParams.get('type') || 'all';
   const [searchQuery, setSearchQuery] = useState('');
@@ -93,5 +93,24 @@ export default function StateDirectoryPage() {
       </main>
       <Footer />
     </>
+  );
+}
+
+export default function StateDirectoryPage() {
+  return (
+    <Suspense fallback={
+      <>
+        <Navigation />
+        <main className={styles.main}>
+          <section className={styles.hero}>
+            <h1 className={styles.title}>State Directory</h1>
+            <p className={styles.subtitle}>Loading...</p>
+          </section>
+        </main>
+        <Footer />
+      </>
+    }>
+      <StateDirectoryContent />
+    </Suspense>
   );
 }
