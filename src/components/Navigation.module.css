@@ -15,7 +15,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 64px;
+  height: 96px;
 }
 
 .logo {
@@ -165,7 +165,7 @@
 
   .navLinks {
     position: fixed;
-    top: 64px;
+    top: 96px;
     left: 0;
     right: 0;
     background: white;
