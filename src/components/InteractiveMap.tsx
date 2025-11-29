@@ -30,6 +30,7 @@ export default function InteractiveMap({
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
+  const hasSetError = useRef(false);
   const [selectedItem, setSelectedItem] = useState<SelectedItem | null>(null);
   const [popupPosition, setPopupPosition] = useState<{ x: number; y: number } | null>(null);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
@@ -59,6 +60,7 @@ export default function InteractiveMap({
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
     map.current.on('load', () => {
+      hasSetError.current = false;
       setIsMapLoaded(true);
       setMapError(null);
     });
@@ -66,9 +68,11 @@ export default function InteractiveMap({
     // Handle map errors (e.g., failed to load style due to invalid token or network issues)
     map.current.on('error', (e) => {
       console.error('Mapbox error:', e.error);
-      // Only set error if it's a style loading error
-      if (e.error?.message?.includes('style') || e.error?.message?.includes('fetch')) {
-        setMapError('Unable to load map. Please check your internet connection.');
+      // Set error for any critical map loading error (only once)
+      // This includes style loading failures, tile loading errors, etc.
+      if (!hasSetError.current) {
+        hasSetError.current = true;
+        setMapError('Unable to load map. Please try refreshing the page.');
         setIsMapLoaded(true); // Hide loading overlay
       }
     });
