@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { SearchRadius, FilterType, HydroVacCompany, DisposalFacility } from '@/types';
-import GoogleMap from './GoogleMap';
+import InteractiveMap from './InteractiveMap';
 import styles from './MapSection.module.css';
 
 interface MapSectionProps {
@@ -13,9 +13,11 @@ interface MapSectionProps {
 }
 
 export default function MapSection({ activeFilter, onFilterChange, companies, facilities }: MapSectionProps) {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [activeSearchQuery, setActiveSearchQuery] = useState('');
   const [searchRadius, setSearchRadius] = useState<SearchRadius>(50);
   const [isLocating, setIsLocating] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
   const [locationError, setLocationError] = useState('');
 
   const handleUseLocation = () => {
@@ -24,8 +26,11 @@ export default function MapSection({ activeFilter, onFilterChange, companies, fa
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          setSearchQuery(`${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)}`);
+          const coords = `${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)}`;
+          setSearchInput(coords);
+          setActiveSearchQuery(coords);
           setIsLocating(false);
+          setIsSearching(true);
         },
         (error) => {
           console.error('Geolocation error:', error);
@@ -41,9 +46,15 @@ export default function MapSection({ activeFilter, onFilterChange, companies, fa
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    // Search functionality would be implemented here
-    console.log('Searching for:', searchQuery, 'within', searchRadius, 'miles');
+    if (searchInput.trim()) {
+      setActiveSearchQuery(searchInput.trim());
+      setIsSearching(true);
+    }
   };
+
+  const handleSearchComplete = useCallback(() => {
+    setIsSearching(false);
+  }, []);
 
   return (
     <section id="map-section" className={styles.mapSection}>
@@ -58,9 +69,9 @@ export default function MapSection({ activeFilter, onFilterChange, companies, fa
               </svg>
               <input
                 type="text"
-                placeholder="Search by city, zip code, or state..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search by city, zip code, or state (e.g., Chicago, Illinois)..."
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
                 className={styles.searchInput}
               />
             </div>
@@ -69,7 +80,7 @@ export default function MapSection({ activeFilter, onFilterChange, companies, fa
               type="button"
               onClick={handleUseLocation}
               className={styles.locationBtn}
-              disabled={isLocating}
+              disabled={isLocating || isSearching}
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="12" cy="12" r="3" />
@@ -89,8 +100,8 @@ export default function MapSection({ activeFilter, onFilterChange, companies, fa
               <option value={100}>100+ miles</option>
             </select>
 
-            <button type="submit" className={styles.searchBtn}>
-              Search
+            <button type="submit" className={styles.searchBtn} disabled={isSearching}>
+              {isSearching ? 'Searching...' : 'Search'}
             </button>
           </form>
           {locationError && <p className={styles.errorMessage}>{locationError}</p>}
@@ -110,7 +121,7 @@ export default function MapSection({ activeFilter, onFilterChange, companies, fa
                 <span>Verified</span>
               </div>
               <div className={styles.legendItem}>
-                <span className={`${styles.pin} ${styles.pinGreen}`}></span>
+                <span className={`${styles.pin} ${styles.pinRed}`}></span>
                 <span>Featured</span>
               </div>
               <div className={styles.legendItem}>
@@ -124,18 +135,20 @@ export default function MapSection({ activeFilter, onFilterChange, companies, fa
             <div className={styles.legendItems}>
               <div className={styles.legendItem}>
                 <span className={`${styles.pin} ${styles.pinGreen}`}></span>
-                <span>Verified</span>
+                <span>Disposal Site</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Interactive Google Map */}
+        {/* Interactive Map */}
         <div className={styles.mapContainer}>
-          <GoogleMap 
+          <InteractiveMap 
             companies={companies}
             facilities={facilities}
             activeFilter={activeFilter}
+            searchQuery={activeSearchQuery}
+            onSearchComplete={handleSearchComplete}
           />
         </div>
 
@@ -145,13 +158,13 @@ export default function MapSection({ activeFilter, onFilterChange, companies, fa
             className={`${styles.filterTab} ${activeFilter === 'all' ? styles.active : ''}`}
             onClick={() => onFilterChange('all')}
           >
-            All Companies Nationwide
+            All Listings
           </button>
           <button
             className={`${styles.filterTab} ${activeFilter === 'hydrovac' ? styles.active : ''}`}
             onClick={() => onFilterChange('hydrovac')}
           >
-            Hydro-Vac Companies Only
+            HydroVac Companies Only
           </button>
           <button
             className={`${styles.filterTab} ${activeFilter === 'disposal' ? styles.active : ''}`}

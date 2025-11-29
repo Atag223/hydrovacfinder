@@ -4,13 +4,13 @@ export type DisposalTier = 'verified';
 
 // Pin colors for map
 export const HYDROVAC_PIN_COLORS: Record<HydroVacTier, string> = {
-  basic: '#9CA3AF', // Gray
-  verified: '#3B82F6', // Blue
-  featured: '#22C55E', // Green
-  premium: '#EAB308', // Gold
+  basic: '#9CA3AF', // Gray - Non-paying companies
+  verified: '#3B82F6', // Blue - Verified
+  featured: '#EF4444', // Red - Featured
+  premium: '#EAB308', // Gold - Premium
 };
 
-export const DISPOSAL_PIN_COLOR = '#22C55E'; // Green
+export const DISPOSAL_PIN_COLOR = '#22C55E'; // Green - Disposal Facilities
 
 // HydroVac Company interface
 export interface HydroVacCompany {
