@@ -6,9 +6,6 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { HydroVacCompany, DisposalFacility, FilterType, HYDROVAC_PIN_COLORS, DISPOSAL_PIN_COLOR } from '@/types';
 import styles from './InteractiveMap.module.css';
 
-// Public access token for demo purposes - in production, use environment variable
-mapboxgl.accessToken = 'pk.eyJ1IjoiaHlkcm92YWNmaW5kZXIiLCJhIjoiY200c2RnNmRuMDAydjJrc2QyNWZ0Nmp4aiJ9.HKQhJlTLTcwDTH-RtU0-jQ';
-
 interface InteractiveMapProps {
   companies: HydroVacCompany[];
   facilities: DisposalFacility[];
@@ -36,9 +33,17 @@ export default function InteractiveMap({
   const [popupPosition, setPopupPosition] = useState<{ x: number; y: number } | null>(null);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
 
+  // Get Mapbox access token from environment variable
+  const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
+
+  // Check for missing token before any hooks - this is a constant at render time
+  const isMissingToken = !mapboxToken;
+
   // Initialize map
   useEffect(() => {
-    if (map.current || !mapContainer.current) return;
+    if (map.current || !mapContainer.current || isMissingToken) return;
+
+    mapboxgl.accessToken = mapboxToken;
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
@@ -68,7 +73,7 @@ export default function InteractiveMap({
       map.current?.remove();
       map.current = null;
     };
-  }, []);
+  }, [mapboxToken, isMissingToken]);
 
   // Create marker element
   const createMarkerElement = useCallback((
@@ -146,13 +151,13 @@ export default function InteractiveMap({
 
   // Handle search
   useEffect(() => {
-    if (!map.current || !searchQuery || !isMapLoaded) return;
+    if (!map.current || !searchQuery || !isMapLoaded || !mapboxToken) return;
 
     // Use Mapbox Geocoding API to search for the location
     const geocodeSearch = async () => {
       try {
         const response = await fetch(
-          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchQuery)}.json?country=us&access_token=${mapboxgl.accessToken}`
+          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchQuery)}.json?country=us&access_token=${mapboxToken}`
         );
         const data = await response.json();
 
@@ -177,7 +182,7 @@ export default function InteractiveMap({
     };
 
     geocodeSearch();
-  }, [searchQuery, isMapLoaded, onSearchComplete]);
+  }, [searchQuery, isMapLoaded, onSearchComplete, mapboxToken]);
 
   // Get tier label for display
   const getTierLabel = (tier: string) => {
@@ -199,6 +204,21 @@ export default function InteractiveMap({
   const filteredCompanies = activeFilter === 'disposal' ? [] : companies;
   const filteredFacilities = activeFilter === 'hydrovac' ? [] : facilities;
   const totalLocations = filteredCompanies.length + filteredFacilities.length;
+
+  // Show error if Mapbox token is not configured
+  if (isMissingToken) {
+    return (
+      <div className={styles.mapContainer}>
+        <div className={styles.errorState}>
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 8v4m0 4h.01" />
+          </svg>
+          <p>Mapbox access token not configured. Please set NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN environment variable.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.mapContainer}>
