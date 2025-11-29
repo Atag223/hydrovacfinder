@@ -17,7 +17,7 @@ export default function Navigation({ isAdmin = false }: NavigationProps) {
     <nav className={styles.nav}>
       <div className={styles.container}>
         <Link href="/" className={styles.logo}>
-          <Image src="/logo.png" alt="HydroVacFinder" width={40} height={40} className={styles.logoImage} />
+          <Image src="/logo.png" alt="HydroVacFinder" width={80} height={80} className={styles.logoImage} />
           <span className={styles.logoText}>HydroVacFinder</span>
         </Link>
 
