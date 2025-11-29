@@ -11,6 +11,7 @@ interface NavigationProps {
 
 export default function Navigation({ isAdmin = false }: NavigationProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [stateDropdownOpen, setStateDropdownOpen] = useState(false);
 
   return (
     <nav className={styles.nav}>
@@ -30,6 +31,28 @@ export default function Navigation({ isAdmin = false }: NavigationProps) {
 
         <div className={`${styles.navLinks} ${mobileMenuOpen ? styles.open : ''}`}>
           <Link href="/" className={styles.navLink}>Home</Link>
+          <div 
+            className={styles.dropdown}
+            onMouseEnter={() => setStateDropdownOpen(true)}
+            onMouseLeave={() => setStateDropdownOpen(false)}
+          >
+            <button className={styles.dropdownBtn}>
+              State Directory
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M6 9l6 6 6-6" />
+              </svg>
+            </button>
+            {stateDropdownOpen && (
+              <div className={styles.dropdownMenu}>
+                <Link href="/state?type=hydrovac" className={styles.dropdownItem}>
+                  Hydro-Vac Companies
+                </Link>
+                <Link href="/state?type=disposal" className={styles.dropdownItem}>
+                  Disposal Facilities
+                </Link>
+              </div>
+            )}
+          </div>
           <Link href="/pricing" className={styles.navLink}>
             List Your Company
           </Link>
