@@ -17,6 +17,7 @@ interface InteractiveMapProps {
 interface SelectedItem {
   type: 'company' | 'facility';
   data: HydroVacCompany | DisposalFacility;
+  lngLat: [number, number]; // Store the geographic coordinates
 }
 
 export default function InteractiveMap({
@@ -75,6 +76,35 @@ export default function InteractiveMap({
     };
   }, [mapboxToken, isMissingToken]);
 
+  // Calculate popup position from geographic coordinates
+  const updatePopupPosition = useCallback(() => {
+    if (!map.current || !selectedItem) return;
+    
+    const point = map.current.project(selectedItem.lngLat);
+    setPopupPosition({
+      x: point.x,
+      y: point.y,
+    });
+  }, [selectedItem]);
+
+  // Update popup position when map moves/zooms
+  useEffect(() => {
+    if (!map.current || !isMapLoaded || !selectedItem) return;
+
+    const handleMapMove = () => {
+      updatePopupPosition();
+    };
+
+    map.current.on('move', handleMapMove);
+    
+    // Initial position update
+    updatePopupPosition();
+
+    return () => {
+      map.current?.off('move', handleMapMove);
+    };
+  }, [selectedItem, isMapLoaded, updatePopupPosition]);
+
   // Create marker element
   const createMarkerElement = useCallback((
     color: string,
@@ -97,17 +127,8 @@ export default function InteractiveMap({
 
     el.addEventListener('click', (e) => {
       e.stopPropagation();
-      const rect = el.getBoundingClientRect();
-      const containerRect = mapContainer.current?.getBoundingClientRect();
       
-      if (containerRect) {
-        setPopupPosition({
-          x: rect.left - containerRect.left + rect.width / 2,
-          y: rect.top - containerRect.top,
-        });
-      }
-      
-      setSelectedItem({ type, data: item });
+      setSelectedItem({ type, data: item, lngLat: [item.longitude, item.latitude] });
     });
 
     return el;
