@@ -49,6 +49,32 @@
   max-width: 400px;
 }
 
+.errorOverlay {
+  position: absolute;
+  bottom: 3rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 0.75rem 1.25rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+}
+
+.errorOverlay svg {
+  color: var(--danger);
+  flex-shrink: 0;
+}
+
+.errorOverlay p {
+  font-size: 0.875rem;
+  color: var(--gray-600);
+  margin: 0;
+}
+
 /* Marker Styles */
 .marker {
   width: 30px;

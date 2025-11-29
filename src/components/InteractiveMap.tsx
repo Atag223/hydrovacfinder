@@ -30,9 +30,11 @@ export default function InteractiveMap({
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
+  const hasSetError = useRef(false);
   const [selectedItem, setSelectedItem] = useState<SelectedItem | null>(null);
   const [popupPosition, setPopupPosition] = useState<{ x: number; y: number } | null>(null);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
+  const [mapError, setMapError] = useState<string | null>(null);
 
   // Get Mapbox access token from environment variable
   const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
@@ -58,7 +60,21 @@ export default function InteractiveMap({
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
     map.current.on('load', () => {
+      hasSetError.current = false;
       setIsMapLoaded(true);
+      setMapError(null);
+    });
+
+    // Handle map errors (e.g., failed to load style due to invalid token or network issues)
+    map.current.on('error', (e) => {
+      console.error('Mapbox error:', e.error);
+      // Set error for any critical map loading error (only once)
+      // This includes style loading failures, tile loading errors, etc.
+      if (!hasSetError.current) {
+        hasSetError.current = true;
+        setMapError('Unable to load map. Please try refreshing the page.');
+        setIsMapLoaded(true); // Hide loading overlay
+      }
     });
 
     // Close popup when clicking on the map
@@ -245,9 +261,19 @@ export default function InteractiveMap({
     <div className={styles.mapContainer}>
       <div ref={mapContainer} className={styles.map} />
       
-      {!isMapLoaded && (
+      {!isMapLoaded && !mapError && (
         <div className={styles.loading}>
           <span>Loading map...</span>
+        </div>
+      )}
+
+      {mapError && (
+        <div className={styles.errorOverlay}>
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 8v4m0 4h.01" />
+          </svg>
+          <p>{mapError}</p>
         </div>
       )}
 
