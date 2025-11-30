@@ -6,7 +6,7 @@ import Link from 'next/link';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import Listings from '@/components/Listings';
-import { mockHydroVacCompanies, mockDisposalFacilities } from '@/data/mockData';
+import { hydroVacCompanies, disposalFacilities } from '@/data/companyData';
 import { FilterType, US_STATES } from '@/types';
 import styles from './page.module.css';
 
@@ -24,10 +24,10 @@ export default function StatePage() {
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
 
   // Filter companies and facilities by state
-  const stateCompanies = mockHydroVacCompanies.filter(
+  const stateCompanies = hydroVacCompanies.filter(
     company => company.state.toLowerCase() === stateName.toLowerCase()
   );
-  const stateFacilities = mockDisposalFacilities.filter(
+  const stateFacilities = disposalFacilities.filter(
     facility => facility.state.toLowerCase() === stateName.toLowerCase()
   );
 

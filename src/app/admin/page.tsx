@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Navigation from '@/components/Navigation';
 import styles from './page.module.css';
-import { mockHydroVacCompanies, mockDisposalFacilities } from '@/data/mockData';
+import { hydroVacCompanies, disposalFacilities } from '@/data/companyData';
 import { DateFilter, HydroVacTier, HydroVacCompany, DisposalFacility, US_STATES } from '@/types';
 
 type AdminTab = 'companies' | 'facilities' | 'analytics' | 'content';
@@ -139,7 +139,7 @@ export default function AdminPage() {
 }
 
 function CompaniesPanel() {
-  const [companies, setCompanies] = useState<HydroVacCompany[]>(mockHydroVacCompanies);
+  const [companies, setCompanies] = useState<HydroVacCompany[]>(hydroVacCompanies);
   const [editingCompany, setEditingCompany] = useState<HydroVacCompany | null>(null);
   const [deletingCompany, setDeletingCompany] = useState<HydroVacCompany | null>(null);
   const [isAddingCompany, setIsAddingCompany] = useState(false);
@@ -243,7 +243,7 @@ function CompaniesPanel() {
 }
 
 function FacilitiesPanel() {
-  const [facilities, setFacilities] = useState<DisposalFacility[]>(mockDisposalFacilities);
+  const [facilities, setFacilities] = useState<DisposalFacility[]>(disposalFacilities);
   const [editingFacility, setEditingFacility] = useState<DisposalFacility | null>(null);
   const [deletingFacility, setDeletingFacility] = useState<DisposalFacility | null>(null);
   const [managingImages, setManagingImages] = useState<DisposalFacility | null>(null);
