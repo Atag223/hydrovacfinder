@@ -1,378 +1,147 @@
-import { HydroVacCompany, DisposalFacility } from '@/types';
+import { HydroVacCompany, DisposalFacility, HydroVacTier } from '@/types';
+import companiesData from './companies_export.json';
 
-export const mockHydroVacCompanies: HydroVacCompany[] = [
-  {
-    id: '1',
-    name: 'Badger Daylighting Corp',
-    city: 'Houston',
-    state: 'Texas',
-    phone: '(713) 956-6100',
-    website: 'https://www.badgerinc.com',
-    serviceSpecialties: ['Hydro Excavation', 'Daylighting', 'Potholing', 'Slot Trenching'],
-    coverageRadius: 150,
-    unionAffiliation: false,
-    tier: 'premium',
-    latitude: 29.7604,
-    longitude: -95.3698,
-    profileViews: 2450,
-    clickToCalls: 540,
-    websiteClicks: 820,
-    directionRequests: 280,
-  },
-  {
-    id: '2',
-    name: 'Clean Harbors Hydro Excavation',
-    city: 'Norwell',
-    state: 'Massachusetts',
-    phone: '(781) 792-5000',
-    website: 'https://www.cleanharbors.com',
-    serviceSpecialties: ['Industrial Cleaning', 'Hydro Excavation', 'Emergency Response'],
-    coverageRadius: 200,
-    unionAffiliation: true,
-    unionLocalNumber: 'LIUNA Local 1010',
-    tier: 'premium',
-    latitude: 42.1615,
-    longitude: -70.8200,
-    profileViews: 1890,
-    clickToCalls: 420,
-    websiteClicks: 650,
-    directionRequests: 195,
-  },
-  {
-    id: '3',
-    name: 'Veolia North America',
-    city: 'Boston',
-    state: 'Massachusetts',
-    phone: '(617) 849-5000',
-    website: 'https://www.veolianorthamerica.com',
-    serviceSpecialties: ['Vacuum Excavation', 'Industrial Services', 'Waste Management'],
-    coverageRadius: 175,
-    unionAffiliation: true,
-    unionLocalNumber: 'Teamsters Local 25',
-    tier: 'featured',
-    latitude: 42.3601,
-    longitude: -71.0589,
-    profileViews: 1250,
-    clickToCalls: 310,
-    websiteClicks: 480,
-    directionRequests: 145,
-  },
-  {
-    id: '4',
-    name: 'GapVax Inc',
-    city: 'Johnstown',
-    state: 'Pennsylvania',
-    phone: '(814) 535-6766',
-    website: 'https://www.gapvax.com',
-    serviceSpecialties: ['Hydro Excavation', 'Sewer Cleaning', 'Industrial Vacuum'],
-    coverageRadius: 100,
-    unionAffiliation: false,
-    tier: 'featured',
-    latitude: 40.3267,
-    longitude: -78.9220,
-    profileViews: 980,
-    clickToCalls: 245,
-    websiteClicks: 380,
-    directionRequests: 110,
-  },
-  {
-    id: '5',
-    name: 'Hydro-Klean LLC',
-    city: 'Des Moines',
-    state: 'Iowa',
-    phone: '(515) 283-0500',
-    website: 'https://www.hydro-klean.com',
-    serviceSpecialties: ['Pipeline Cleaning', 'Hydro Excavation', 'CCTV Inspection'],
-    coverageRadius: 125,
-    unionAffiliation: true,
-    unionLocalNumber: 'LIUNA Local 177',
-    tier: 'verified',
-    latitude: 41.5868,
-    longitude: -93.6250,
-    profileViews: 720,
-    clickToCalls: 185,
-    websiteClicks: 290,
-    directionRequests: 88,
-  },
-  {
-    id: '6',
-    name: 'Vector Vacuum Services',
-    city: 'Denver',
-    state: 'Colorado',
-    phone: '(303) 371-8188',
-    website: 'https://www.vectorvacuum.com',
-    serviceSpecialties: ['Hydro Excavation', 'Potholing', 'Utility Locating'],
-    coverageRadius: 100,
-    unionAffiliation: false,
-    tier: 'verified',
-    latitude: 39.7392,
-    longitude: -104.9903,
-    profileViews: 580,
-    clickToCalls: 142,
-    websiteClicks: 225,
-    directionRequests: 65,
-  },
-  {
-    id: '7',
-    name: 'Thompson Industrial Services',
-    city: 'Sumter',
-    state: 'South Carolina',
-    phone: '(803) 773-7371',
-    website: 'https://www.thompsonind.com',
-    serviceSpecialties: ['Industrial Cleaning', 'Vacuum Services', 'Tank Cleaning'],
-    coverageRadius: 150,
-    unionAffiliation: false,
-    tier: 'basic',
-    latitude: 33.9204,
-    longitude: -80.3415,
-    profileViews: 340,
-    clickToCalls: 82,
-    websiteClicks: 155,
-    directionRequests: 45,
-  },
-  {
-    id: '8',
-    name: 'Express Sewer & Drain',
-    city: 'Sacramento',
-    state: 'California',
-    phone: '(916) 318-4004',
-    website: 'https://www.expresssewer.com',
-    serviceSpecialties: ['Hydro Jetting', 'Vacuum Excavation', 'Sewer Repair'],
-    coverageRadius: 75,
-    unionAffiliation: true,
-    unionLocalNumber: 'UA Local 447',
-    tier: 'basic',
-    latitude: 38.5816,
-    longitude: -121.4944,
-    profileViews: 290,
-    clickToCalls: 68,
-    websiteClicks: 115,
-    directionRequests: 38,
-  },
-  // Additional companies for nationwide coverage
-  {
-    id: '9',
-    name: 'Pacific Hydrovac Services',
-    city: 'Seattle',
-    state: 'Washington',
-    phone: '(206) 555-0123',
-    website: 'https://www.pacifichydrovac.com',
-    serviceSpecialties: ['Hydro Excavation', 'Utility Locating', 'Environmental Services'],
-    coverageRadius: 120,
-    unionAffiliation: true,
-    unionLocalNumber: 'LIUNA Local 242',
-    tier: 'premium',
-    latitude: 47.6062,
-    longitude: -122.3321,
-    profileViews: 1560,
-    clickToCalls: 380,
-    websiteClicks: 520,
-    directionRequests: 175,
-  },
-  {
-    id: '10',
-    name: 'Midwest Vac Solutions',
-    city: 'Chicago',
-    state: 'Illinois',
-    phone: '(312) 555-0456',
-    website: 'https://www.midwestvac.com',
-    serviceSpecialties: ['Industrial Vacuum', 'Hydro Excavation', 'Pipeline Services'],
-    coverageRadius: 180,
-    unionAffiliation: true,
-    unionLocalNumber: 'LIUNA Local 1',
-    tier: 'premium',
-    latitude: 41.8781,
-    longitude: -87.6298,
-    profileViews: 2100,
-    clickToCalls: 490,
-    websiteClicks: 680,
-    directionRequests: 220,
-  },
-  {
-    id: '11',
-    name: 'Sunshine State Hydro',
-    city: 'Miami',
-    state: 'Florida',
-    phone: '(305) 555-0789',
-    website: 'https://www.sunshinehydro.com',
-    serviceSpecialties: ['Hydro Excavation', 'Storm Drain Cleaning', 'Emergency Response'],
-    coverageRadius: 100,
-    unionAffiliation: false,
-    tier: 'featured',
-    latitude: 25.7617,
-    longitude: -80.1918,
-    profileViews: 890,
-    clickToCalls: 210,
-    websiteClicks: 340,
-    directionRequests: 95,
-  },
-  {
-    id: '12',
-    name: 'Rocky Mountain Excavation',
-    city: 'Salt Lake City',
-    state: 'Utah',
-    phone: '(801) 555-0321',
-    website: 'https://www.rockymtnexc.com',
-    serviceSpecialties: ['Hydro Excavation', 'Potholing', 'Trenching'],
-    coverageRadius: 150,
-    unionAffiliation: false,
-    tier: 'verified',
-    latitude: 40.7608,
-    longitude: -111.8910,
-    profileViews: 620,
-    clickToCalls: 155,
-    websiteClicks: 245,
-    directionRequests: 72,
-  },
-  {
-    id: '13',
-    name: 'Desert Vac Services',
-    city: 'Phoenix',
-    state: 'Arizona',
-    phone: '(602) 555-0654',
-    website: 'https://www.desertvac.com',
-    serviceSpecialties: ['Hydro Excavation', 'Industrial Cleaning', 'Utility Location'],
-    coverageRadius: 130,
-    unionAffiliation: false,
-    tier: 'featured',
-    latitude: 33.4484,
-    longitude: -112.0740,
-    profileViews: 780,
-    clickToCalls: 195,
-    websiteClicks: 310,
-    directionRequests: 88,
-  },
-  {
-    id: '14',
-    name: 'Great Lakes Hydrovac',
-    city: 'Detroit',
-    state: 'Michigan',
-    phone: '(313) 555-0987',
-    website: 'https://www.greatlakeshydrovac.com',
-    serviceSpecialties: ['Hydro Excavation', 'Sewer Services', 'Industrial Vacuum'],
-    coverageRadius: 140,
-    unionAffiliation: true,
-    unionLocalNumber: 'LIUNA Local 1191',
-    tier: 'verified',
-    latitude: 42.3314,
-    longitude: -83.0458,
-    profileViews: 540,
-    clickToCalls: 135,
-    websiteClicks: 210,
-    directionRequests: 62,
-  },
-  {
-    id: '15',
-    name: 'Empire State Excavation',
-    city: 'New York',
-    state: 'New York',
-    phone: '(212) 555-1234',
-    website: 'https://www.empireexcavation.com',
-    serviceSpecialties: ['Hydro Excavation', 'Utility Locating', 'Urban Excavation'],
-    coverageRadius: 80,
-    unionAffiliation: true,
-    unionLocalNumber: 'LIUNA Local 79',
-    tier: 'premium',
-    latitude: 40.7128,
-    longitude: -74.0060,
-    profileViews: 1980,
-    clickToCalls: 450,
-    websiteClicks: 690,
-    directionRequests: 235,
-  },
-  {
-    id: '16',
-    name: 'Georgia Vac Solutions',
-    city: 'Atlanta',
-    state: 'Georgia',
-    phone: '(404) 555-5678',
-    website: 'https://www.georgiavac.com',
-    serviceSpecialties: ['Hydro Excavation', 'Pipeline Services', 'Industrial Cleaning'],
-    coverageRadius: 160,
-    unionAffiliation: false,
-    tier: 'basic',
-    latitude: 33.7490,
-    longitude: -84.3880,
-    profileViews: 380,
-    clickToCalls: 92,
-    websiteClicks: 165,
-    directionRequests: 48,
-  },
-  {
-    id: '17',
-    name: 'North Star Hydro',
-    city: 'Minneapolis',
-    state: 'Minnesota',
-    phone: '(612) 555-9012',
-    website: 'https://www.northstarhydro.com',
-    serviceSpecialties: ['Hydro Excavation', 'Winter Services', 'Utility Locating'],
-    coverageRadius: 175,
-    unionAffiliation: true,
-    unionLocalNumber: 'LIUNA Local 563',
-    tier: 'verified',
-    latitude: 44.9778,
-    longitude: -93.2650,
-    profileViews: 690,
-    clickToCalls: 168,
-    websiteClicks: 275,
-    directionRequests: 79,
-  },
-  {
-    id: '18',
-    name: 'Bayou Excavation Services',
-    city: 'New Orleans',
-    state: 'Louisiana',
-    phone: '(504) 555-3456',
-    website: 'https://www.bayouexcavation.com',
-    serviceSpecialties: ['Hydro Excavation', 'Dredging', 'Environmental Cleanup'],
-    coverageRadius: 110,
-    unionAffiliation: false,
-    tier: 'basic',
-    latitude: 29.9511,
-    longitude: -90.0715,
-    profileViews: 320,
-    clickToCalls: 78,
-    websiteClicks: 140,
-    directionRequests: 41,
-  },
-  {
-    id: '19',
-    name: 'Golden Gate Vac',
-    city: 'San Francisco',
-    state: 'California',
-    phone: '(415) 555-7890',
-    website: 'https://www.goldengatevac.com',
-    serviceSpecialties: ['Hydro Excavation', 'Utility Services', 'Urban Projects'],
-    coverageRadius: 70,
-    unionAffiliation: true,
-    unionLocalNumber: 'LIUNA Local 261',
-    tier: 'premium',
-    latitude: 37.7749,
-    longitude: -122.4194,
-    profileViews: 1720,
-    clickToCalls: 410,
-    websiteClicks: 580,
-    directionRequests: 195,
-  },
-  {
-    id: '20',
-    name: 'Lone Star Hydrovac',
-    city: 'Dallas',
-    state: 'Texas',
-    phone: '(214) 555-2345',
-    website: 'https://www.lonestarhydrovac.com',
-    serviceSpecialties: ['Hydro Excavation', 'Oilfield Services', 'Industrial Vacuum'],
-    coverageRadius: 200,
-    unionAffiliation: false,
-    tier: 'featured',
-    latitude: 32.7767,
-    longitude: -96.7970,
-    profileViews: 950,
-    clickToCalls: 230,
-    websiteClicks: 375,
-    directionRequests: 105,
-  },
-];
+// Raw company data type from the JSON file
+interface RawCompany {
+  id: number;
+  name: string;
+  address: string;
+  phone: string;
+  email: string;
+  website: string | null;
+  description: string;
+  services: string;
+  coverage_area: string;
+  lat: number | null;
+  lng: number | null;
+  tier: string;
+  logo_url: string | null;
+  created_at: string;
+  is_union: boolean;
+  union_name: string | null;
+}
+
+/**
+ * Parse city and state from an address string
+ * Expected format: "Street Address, City, STATE ZIP, Country" or similar
+ */
+function parseCityState(address: string): { city: string; state: string } {
+  if (!address) {
+    return { city: 'Unknown', state: 'Unknown' };
+  }
+  
+  // Split by comma
+  const parts = address.split(',').map(p => p.trim());
+  
+  // Try to extract city and state
+  // Usually format is: "Street Address, City, STATE ZIP, Country"
+  if (parts.length >= 3) {
+    const city = parts[parts.length - 3] || 'Unknown';
+    // State part usually contains "STATE ZIP"
+    const stateZipPart = parts[parts.length - 2] || '';
+    // Extract just the state abbreviation (first word before ZIP)
+    const stateMatch = stateZipPart.match(/^([A-Za-z]{2})/);
+    const stateAbbr = stateMatch ? stateMatch[1].toUpperCase() : '';
+    
+    // Convert state abbreviation to full name
+    const state = STATE_ABBR_TO_NAME[stateAbbr] || stateZipPart.split(' ')[0] || 'Unknown';
+    
+    return { city, state };
+  } else if (parts.length === 2) {
+    return { city: parts[0], state: parts[1] };
+  }
+  
+  return { city: 'Unknown', state: 'Unknown' };
+}
+
+/**
+ * Map tier from JSON to HydroVacTier
+ */
+function mapTier(tier: string): HydroVacTier {
+  switch (tier.toLowerCase()) {
+    case 'premium':
+      return 'premium';
+    case 'featured':
+      return 'featured';
+    case 'verified':
+      return 'verified';
+    case 'free':
+    case 'basic':
+    default:
+      return 'basic';
+  }
+}
+
+/**
+ * Parse services string into array
+ */
+function parseServices(services: string): string[] {
+  if (!services) {
+    return ['Hydro Excavation'];
+  }
+  
+  // Split by comma and clean up
+  return services.split(',').map(s => s.trim()).filter(s => s.length > 0);
+}
+
+// State abbreviation to full name mapping
+const STATE_ABBR_TO_NAME: Record<string, string> = {
+  'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas',
+  'CA': 'California', 'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware',
+  'FL': 'Florida', 'GA': 'Georgia', 'HI': 'Hawaii', 'ID': 'Idaho',
+  'IL': 'Illinois', 'IN': 'Indiana', 'IA': 'Iowa', 'KS': 'Kansas',
+  'KY': 'Kentucky', 'LA': 'Louisiana', 'ME': 'Maine', 'MD': 'Maryland',
+  'MA': 'Massachusetts', 'MI': 'Michigan', 'MN': 'Minnesota', 'MS': 'Mississippi',
+  'MO': 'Missouri', 'MT': 'Montana', 'NE': 'Nebraska', 'NV': 'Nevada',
+  'NH': 'New Hampshire', 'NJ': 'New Jersey', 'NM': 'New Mexico', 'NY': 'New York',
+  'NC': 'North Carolina', 'ND': 'North Dakota', 'OH': 'Ohio', 'OK': 'Oklahoma',
+  'OR': 'Oregon', 'PA': 'Pennsylvania', 'RI': 'Rhode Island', 'SC': 'South Carolina',
+  'SD': 'South Dakota', 'TN': 'Tennessee', 'TX': 'Texas', 'UT': 'Utah',
+  'VT': 'Vermont', 'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia',
+  'WI': 'Wisconsin', 'WY': 'Wyoming', 'DC': 'District of Columbia',
+  // Canadian provinces (some entries in data may be from Canada)
+  'BC': 'British Columbia', 'AB': 'Alberta', 'SK': 'Saskatchewan', 'MB': 'Manitoba',
+  'ON': 'Ontario', 'QC': 'Quebec', 'NB': 'New Brunswick', 'NS': 'Nova Scotia',
+  'PE': 'Prince Edward Island', 'NL': 'Newfoundland and Labrador'
+};
+
+/**
+ * Transform raw company data to HydroVacCompany format
+ */
+function transformCompany(raw: RawCompany): HydroVacCompany | null {
+  // Skip companies without valid coordinates
+  if (raw.lat === null || raw.lng === null) {
+    return null;
+  }
+  
+  const { city, state } = parseCityState(raw.address);
+  
+  return {
+    id: String(raw.id),
+    name: raw.name,
+    city,
+    state,
+    phone: raw.phone || '',
+    website: raw.website || '',
+    serviceSpecialties: parseServices(raw.services),
+    coverageRadius: 100, // Default coverage radius
+    unionAffiliation: raw.is_union,
+    unionLocalNumber: raw.union_name || undefined,
+    tier: mapTier(raw.tier),
+    latitude: raw.lat,
+    longitude: raw.lng,
+    // Default analytics values for new companies
+    profileViews: Math.floor(Math.random() * 500) + 100,
+    clickToCalls: Math.floor(Math.random() * 100) + 20,
+    websiteClicks: Math.floor(Math.random() * 200) + 50,
+    directionRequests: Math.floor(Math.random() * 80) + 10,
+  };
+}
+
+// Transform all companies from the JSON data
+export const mockHydroVacCompanies: HydroVacCompany[] = (companiesData as RawCompany[])
+  .map(transformCompany)
+  .filter((company): company is HydroVacCompany => company !== null);
 
 export const mockDisposalFacilities: DisposalFacility[] = [
   {
