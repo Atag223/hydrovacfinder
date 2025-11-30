@@ -31,8 +31,9 @@ export default function InteractiveMap({
   const map = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
   const hasSetError = useRef(false);
+  const detailCardRef = useRef<HTMLDivElement>(null);
   const [selectedItem, setSelectedItem] = useState<SelectedItem | null>(null);
-  const [popupPosition, setPopupPosition] = useState<{ x: number; y: number } | null>(null);
+  const [popupPosition, setPopupPosition] = useState<{ x: number; y: number; placement: 'above' | 'below' } | null>(null);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
   const [mapError, setMapError] = useState<string | null>(null);
 
@@ -92,15 +93,43 @@ export default function InteractiveMap({
     };
   }, [mapboxToken, isMissingToken]);
 
-  // Calculate popup position from geographic coordinates
+  // Calculate popup position from geographic coordinates with viewport awareness
   const updatePopupPosition = useCallback(() => {
-    if (!map.current || !selectedItem) return;
+    if (!map.current || !selectedItem || !mapContainer.current) return;
     
     const point = map.current.project(selectedItem.lngLat);
-    setPopupPosition({
-      x: point.x,
-      y: point.y,
-    });
+    const containerRect = mapContainer.current.getBoundingClientRect();
+    
+    // Estimated card dimensions for boundary calculations
+    const cardHeight = 200;
+    const cardWidth = 280;
+    const markerHeight = 30;
+    const padding = 20;
+    
+    // Determine if popup should appear above or below the marker
+    const spaceAbove = point.y;
+    const placement: 'above' | 'below' = spaceAbove > cardHeight + padding ? 'above' : 'below';
+    
+    // Calculate horizontal position ensuring the card stays within bounds
+    let x = point.x;
+    const halfCardWidth = cardWidth / 2;
+    
+    // Clamp horizontal position to keep card within container
+    if (x - halfCardWidth < padding) {
+      x = halfCardWidth + padding;
+    } else if (x + halfCardWidth > containerRect.width - padding) {
+      x = containerRect.width - halfCardWidth - padding;
+    }
+    
+    // Calculate vertical position based on placement
+    let y = point.y;
+    if (placement === 'above') {
+      y = point.y - 10; // Small offset from marker
+    } else {
+      y = point.y + markerHeight + 10; // Below the marker
+    }
+    
+    setPopupPosition({ x, y, placement });
   }, [selectedItem]);
 
   // Update popup position when map moves/zooms
@@ -112,13 +141,21 @@ export default function InteractiveMap({
     };
 
     map.current.on('move', handleMapMove);
-    
-    // Initial position update
-    updatePopupPosition();
 
     return () => {
       map.current?.off('move', handleMapMove);
     };
+  }, [selectedItem, isMapLoaded, updatePopupPosition]);
+
+  // Initial position update when selectedItem changes
+  useEffect(() => {
+    if (selectedItem && isMapLoaded) {
+      // Use requestAnimationFrame to defer the state update
+      const rafId = requestAnimationFrame(() => {
+        updatePopupPosition();
+      });
+      return () => cancelAnimationFrame(rafId);
+    }
   }, [selectedItem, isMapLoaded, updatePopupPosition]);
 
   // Create marker element
@@ -167,7 +204,7 @@ export default function InteractiveMap({
       const color = HYDROVAC_PIN_COLORS[company.tier];
       const el = createMarkerElement(color, 'company', company);
       
-      const marker = new mapboxgl.Marker({ element: el })
+      const marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
         .setLngLat([company.longitude, company.latitude])
         .addTo(map.current!);
       
@@ -178,7 +215,7 @@ export default function InteractiveMap({
     filteredFacilities.forEach((facility) => {
       const el = createMarkerElement(DISPOSAL_PIN_COLOR, 'facility', facility);
       
-      const marker = new mapboxgl.Marker({ element: el })
+      const marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
         .setLngLat([facility.longitude, facility.latitude])
         .addTo(map.current!);
       
@@ -280,10 +317,11 @@ export default function InteractiveMap({
       {/* Detail Card Popup */}
       {selectedItem && popupPosition && (
         <div
-          className={styles.detailCard}
+          ref={detailCardRef}
+          className={`${styles.detailCard} ${popupPosition.placement === 'below' ? styles.detailCardBelow : ''}`}
           style={{
             left: `${popupPosition.x}px`,
-            top: `${popupPosition.y - 10}px`,
+            top: `${popupPosition.y}px`,
           }}
         >
           <button

@@ -81,12 +81,16 @@
   height: 30px;
   border-radius: 50% 50% 50% 0;
   transform: rotate(-45deg);
+  transform-origin: center center;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  /* Offset the marker so the bottom tip aligns with the anchor point */
+  margin-top: -15px;
+  margin-left: -15px;
 }
 
 .marker:hover {
@@ -126,6 +130,8 @@
   min-width: 260px;
   max-width: 320px;
   z-index: 100;
+  max-height: calc(100% - 60px);
+  overflow-y: auto;
 }
 
 .detailCard::after {
@@ -137,6 +143,18 @@
   border-left: 10px solid transparent;
   border-right: 10px solid transparent;
   border-top: 10px solid white;
+}
+
+/* Detail Card positioned below the marker */
+.detailCardBelow {
+  transform: translate(-50%, 0);
+}
+
+.detailCardBelow::after {
+  bottom: auto;
+  top: -8px;
+  border-top: none;
+  border-bottom: 10px solid white;
 }
 
 .closeBtn {
@@ -303,8 +321,12 @@
   
   .detailCard {
     min-width: 200px;
-    max-width: 260px;
+    max-width: calc(100% - 2rem);
     left: 50% !important;
     transform: translateX(-50%) translateY(-100%);
+  }
+  
+  .detailCardBelow {
+    transform: translateX(-50%) translateY(0);
   }
 }

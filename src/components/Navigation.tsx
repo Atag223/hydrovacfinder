@@ -61,9 +61,6 @@ export default function Navigation({ isAdmin = false }: NavigationProps) {
               Admin
             </Link>
           )}
-          <Link href="/pricing" className={styles.ctaBtn}>
-            Get Listed
-          </Link>
         </div>
       </div>
     </nav>

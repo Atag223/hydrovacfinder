@@ -86,6 +86,7 @@ const disposalPackage = {
 
 export default function PricingPage() {
   const [isReferralFormOpen, setIsReferralFormOpen] = useState(false);
+  const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
 
   return (
     <>
@@ -154,7 +155,8 @@ export default function PricingPage() {
             {hydrovacPackages.map((pkg) => (
               <div 
                 key={pkg.tier} 
-                className={`${styles.pricingCard} ${pkg.popular ? styles.popular : ''}`}
+                className={`${styles.pricingCard} ${selectedPackage === pkg.tier ? styles.selected : ''}`}
+                onClick={() => setSelectedPackage(pkg.tier)}
               >
                 {pkg.popular && <span className={styles.popularBadge}>Most Popular</span>}
                 <div className={styles.cardHeader}>
