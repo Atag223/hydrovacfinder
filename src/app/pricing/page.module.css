@@ -98,8 +98,9 @@
   background: white;
   border-radius: 1rem;
   padding: 2rem;
-  border: 1px solid var(--gray-200);
+  border: 2px solid var(--gray-200);
   transition: all 0.3s ease;
+  cursor: pointer;
 }
 
 .pricingCard:hover {
@@ -107,9 +108,9 @@
   transform: translateY(-4px);
 }
 
-.pricingCard.popular {
-  border: 2px solid var(--tier-featured);
-  box-shadow: 0 8px 24px rgba(34, 197, 94, 0.15);
+.pricingCard.selected {
+  border: 2px solid var(--danger);
+  box-shadow: 0 8px 24px rgba(239, 68, 68, 0.2);
 }
 
 .popularBadge {
