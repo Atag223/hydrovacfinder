@@ -1,5 +1,9 @@
+'use client';
+
+import { useState } from 'react';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
+import ReferralForm from '@/components/ReferralForm';
 import styles from './page.module.css';
 
 const hydrovacPackages = [
@@ -81,6 +85,8 @@ const disposalPackage = {
 };
 
 export default function PricingPage() {
+  const [isReferralFormOpen, setIsReferralFormOpen] = useState(false);
+
   return (
     <>
       <Navigation />
@@ -260,7 +266,10 @@ export default function PricingPage() {
                 Refer a Hydro-Vac company or Disposal Facility that signs up for a Featured or higher package,
                 and earn $150 for each successful referral. Unlimited referrals!
               </p>
-              <button className={styles.ctaButton}>
+              <button 
+                className={styles.ctaButton}
+                onClick={() => setIsReferralFormOpen(true)}
+              >
                 Join Referral Program
               </button>
             </div>
@@ -279,6 +288,10 @@ export default function PricingPage() {
         </section>
       </main>
       <Footer />
+      <ReferralForm 
+        isOpen={isReferralFormOpen} 
+        onClose={() => setIsReferralFormOpen(false)} 
+      />
     </>
   );
 }
