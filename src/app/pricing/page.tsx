@@ -68,7 +68,7 @@ const stateOwnership = {
 
 const disposalPackage = {
   name: 'Disposal Facility Verified',
-  yearlyPrice: 2000,
+  yearlyPrice: 1750,
   features: [
     'Green pin on map',
     'Facility profile listing',
