@@ -109,7 +109,7 @@
 }
 
 .pricingCard.selected {
-  border: 2px solid #EF4444;
+  border: 2px solid var(--danger);
   box-shadow: 0 8px 24px rgba(239, 68, 68, 0.2);
 }
 
