@@ -3,6 +3,9 @@
 import { useState, FormEvent } from 'react';
 import styles from './ReferralForm.module.css';
 
+// Time to display success message before closing modal (in milliseconds)
+const SUCCESS_MESSAGE_DISPLAY_MS = 2000;
+
 interface ReferralFormProps {
   isOpen: boolean;
   onClose: () => void;
@@ -56,7 +59,7 @@ export default function ReferralForm({ isOpen, onClose }: ReferralFormProps) {
         setTimeout(() => {
           onClose();
           setSubmitMessage(null);
-        }, 2000);
+        }, SUCCESS_MESSAGE_DISPLAY_MS);
       } else {
         setSubmitMessage({ type: 'error', text: result.error || 'Failed to submit referral' });
       }

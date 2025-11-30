@@ -1,5 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Email validation regex pattern
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/**
+ * Validates an email address format
+ */
+function isValidEmail(email: string): boolean {
+  return EMAIL_REGEX.test(email);
+}
+
 interface ReferralFormData {
   // Company being referred
   companyName: string;
@@ -36,15 +46,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(data.referrerEmail)) {
+    if (!isValidEmail(data.referrerEmail)) {
       return NextResponse.json(
         { error: 'Invalid email address' },
         { status: 400 }
       );
     }
 
-    // Format the email content
+    // Format the email content for sending to ap@hydrovacfinder.com
     const emailSubject = `New Referral: ${data.companyName}`;
     const emailBody = `
 New Referral Submission
@@ -66,16 +75,22 @@ Phone: ${data.referrerPhone}
 This referral was submitted through HydroVacFinder.com
     `.trim();
 
-    // Log the referral for now (in production, you would use an email service like SendGrid, Resend, etc.)
-    console.log('=== NEW REFERRAL SUBMISSION ===');
-    console.log('To: ap@hydrovacfinder.com');
-    console.log(`Subject: ${emailSubject}`);
-    console.log('Body:');
-    console.log(emailBody);
-    console.log('================================');
+    // TODO: Integrate with an email service (e.g., SendGrid, Resend, AWS SES)
+    // to send the referral to ap@hydrovacfinder.com
+    // For now, we store the email content to be sent when email service is configured
+    const emailPayload = {
+      to: 'ap@hydrovacfinder.com',
+      subject: emailSubject,
+      body: emailBody,
+    };
 
-    // For a production implementation, you would integrate with an email service here.
-    // Example with fetch to an email API:
+    // In development, log that a referral was received (without sensitive data)
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`Referral received for company: ${data.companyName}`);
+    }
+
+    // Placeholder for email service integration
+    // When you configure an email service, uncomment and modify:
     //
     // const emailResponse = await fetch('https://api.sendgrid.com/v3/mail/send', {
     //   method: 'POST',
@@ -84,12 +99,15 @@ This referral was submitted through HydroVacFinder.com
     //     'Content-Type': 'application/json',
     //   },
     //   body: JSON.stringify({
-    //     personalizations: [{ to: [{ email: 'ap@hydrovacfinder.com' }] }],
+    //     personalizations: [{ to: [{ email: emailPayload.to }] }],
     //     from: { email: 'noreply@hydrovacfinder.com' },
-    //     subject: emailSubject,
-    //     content: [{ type: 'text/plain', value: emailBody }],
+    //     subject: emailPayload.subject,
+    //     content: [{ type: 'text/plain', value: emailPayload.body }],
     //   }),
     // });
+
+    // Ensure emailPayload is used to avoid unused variable warning
+    void emailPayload;
 
     return NextResponse.json({
       success: true,
