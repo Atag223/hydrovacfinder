@@ -139,11 +139,11 @@ function transformCompany(raw: RawCompany): HydroVacCompany | null {
 }
 
 // Transform all companies from the JSON data
-export const mockHydroVacCompanies: HydroVacCompany[] = (companiesData as RawCompany[])
+export const hydroVacCompanies: HydroVacCompany[] = (companiesData as RawCompany[])
   .map(transformCompany)
   .filter((company): company is HydroVacCompany => company !== null);
 
-export const mockDisposalFacilities: DisposalFacility[] = [
+export const disposalFacilities: DisposalFacility[] = [
   {
     id: 'd1',
     name: 'Clean Harbors Deer Park',

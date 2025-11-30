@@ -7,7 +7,7 @@ import MapSection from '@/components/MapSection';
 import Listings from '@/components/Listings';
 import Footer from '@/components/Footer';
 import { FilterType } from '@/types';
-import { mockHydroVacCompanies, mockDisposalFacilities } from '@/data/mockData';
+import { hydroVacCompanies, disposalFacilities } from '@/data/companyData';
 
 export default function Home() {
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
@@ -20,12 +20,12 @@ export default function Home() {
         <MapSection 
           activeFilter={activeFilter} 
           onFilterChange={setActiveFilter}
-          companies={mockHydroVacCompanies}
-          facilities={mockDisposalFacilities}
+          companies={hydroVacCompanies}
+          facilities={disposalFacilities}
         />
         <Listings 
-          companies={mockHydroVacCompanies} 
-          facilities={mockDisposalFacilities} 
+          companies={hydroVacCompanies} 
+          facilities={disposalFacilities} 
           activeFilter={activeFilter}
         />
       </main>
