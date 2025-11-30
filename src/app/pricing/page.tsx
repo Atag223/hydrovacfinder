@@ -92,6 +92,55 @@ export default function PricingPage() {
           </p>
         </section>
 
+        {/* Why Companies Pay Section */}
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>Why Companies Pay to Be Listed on HydroVacFinder.com</h2>
+          <div className={styles.whyPayGrid}>
+            <div className={styles.whyPayCard}>
+              <div className={styles.whyPayNumber}>1</div>
+              <h3 className={styles.whyPayTitle}>You get found by the people who actually control the work.</h3>
+              <p className={styles.whyPayDesc}>
+                HydroVacFinder.com is actively used nationwide by project managers from major construction firms, utility companies, pipeline contractors, and large industrial clients. These are the people who make the call on who gets hired — not random web traffic.
+              </p>
+            </div>
+            <div className={styles.whyPayCard}>
+              <div className={styles.whyPayNumber}>2</div>
+              <h3 className={styles.whyPayTitle}>You show up where customers are already searching.</h3>
+              <p className={styles.whyPayDesc}>
+                Contractors aren&apos;t digging through Google anymore. They go straight to HydroVacFinder.com because it&apos;s the only directory built exclusively for hydro-vac companies and disposal sites. Paying members get pushed to the top and get seen first.
+              </p>
+            </div>
+            <div className={styles.whyPayCard}>
+              <div className={styles.whyPayNumber}>3</div>
+              <h3 className={styles.whyPayTitle}>Your competitors are being seen — if you&apos;re not listed, you&apos;re invisible.</h3>
+              <p className={styles.whyPayDesc}>
+                The directory is filling up fast. When PMs zoom into a state or a city, the first companies they see are Featured and Premium members. If someone else is showing up instead of you, they&apos;re getting the calls you should be getting.
+              </p>
+            </div>
+            <div className={styles.whyPayCard}>
+              <div className={styles.whyPayNumber}>4</div>
+              <h3 className={styles.whyPayTitle}>Increased call volume and higher-quality leads.</h3>
+              <p className={styles.whyPayDesc}>
+                Paid listings get priority placement on state pages, more profile visibility, and better exposure on the interactive map. That means more inbound calls from real contractors needing trucks, not tire-kickers.
+              </p>
+            </div>
+            <div className={styles.whyPayCard}>
+              <div className={styles.whyPayNumber}>5</div>
+              <h3 className={styles.whyPayTitle}>Your brand gains credibility instantly.</h3>
+              <p className={styles.whyPayDesc}>
+                A Verified, Featured, or Premium badge on the largest hydro-vac directory in the country separates you from small outfits and unverified listings. PMs trust companies that show up professionally and are easy to contact.
+              </p>
+            </div>
+            <div className={styles.whyPayCard}>
+              <div className={styles.whyPayNumber}>6</div>
+              <h3 className={styles.whyPayTitle}>It eliminates downtime and keeps your trucks working.</h3>
+              <p className={styles.whyPayDesc}>
+                Idle trucks cost money. A paid listing puts your business in front of crews who need subs right now — whether it&apos;s an emergency dig, a last-minute call-out, or a scheduled long-term project.
+              </p>
+            </div>
+          </div>
+        </section>
+
         {/* Hydro-Vac Company Packages */}
         <section className={styles.section}>
           <h2 className={styles.sectionTitle}>Hydro-Vac Company Packages</h2>
