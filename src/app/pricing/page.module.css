@@ -30,6 +30,54 @@
   padding: 3rem 1rem;
 }
 
+/* Why Companies Pay Section */
+.whyPayGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 1.5rem;
+}
+
+.whyPayCard {
+  background: white;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  border: 1px solid var(--gray-200);
+  transition: all 0.3s ease;
+}
+
+.whyPayCard:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.whyPayNumber {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: var(--primary);
+  color: white;
+  font-size: 1rem;
+  font-weight: 700;
+  border-radius: 50%;
+  margin-bottom: 1rem;
+}
+
+.whyPayTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--gray-900);
+  margin-bottom: 0.75rem;
+  line-height: 1.4;
+}
+
+.whyPayDesc {
+  font-size: 0.9375rem;
+  color: var(--gray-600);
+  line-height: 1.6;
+}
+
 .sectionTitle {
   font-size: 1.75rem;
   font-weight: 700;
@@ -300,6 +348,10 @@
 
 @media (max-width: 768px) {
   .pricingGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .whyPayGrid {
     grid-template-columns: 1fr;
   }
 
