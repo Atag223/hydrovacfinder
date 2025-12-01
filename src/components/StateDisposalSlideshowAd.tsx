@@ -14,28 +14,31 @@ export default function StateDisposalSlideshowAd({ stateName }: StateDisposalSli
   const [currentSlide, setCurrentSlide] = useState(0);
   const [description, setDescription] = useState<string>('');
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
-    if (files) {
-      const newImages: string[] = [];
-      Array.from(files).forEach((file) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          newImages.push(e.target?.result as string);
-          if (newImages.length === files.length) {
-            setImages((prev) => [...prev, ...newImages]);
-          }
-        };
-        reader.readAsDataURL(file);
-      });
+    if (files && files.length > 0) {
+      const readFile = (file: File): Promise<string> => {
+        return new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            resolve(e.target?.result as string);
+          };
+          reader.readAsDataURL(file);
+        });
+      };
+
+      const newImages = await Promise.all(Array.from(files).map(readFile));
+      setImages((prev) => [...prev, ...newImages]);
     }
   };
 
   const nextSlide = useCallback(() => {
+    if (images.length === 0) return;
     setCurrentSlide((prev) => (prev + 1) % images.length);
   }, [images.length]);
 
   const prevSlide = useCallback(() => {
+    if (images.length === 0) return;
     setCurrentSlide((prev) => (prev - 1 + images.length) % images.length);
   }, [images.length]);
 
