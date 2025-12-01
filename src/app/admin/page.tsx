@@ -990,7 +990,22 @@ function StatePagesEditor({ onClose }: { onClose: () => void }) {
   const [selectedState, setSelectedState] = useState('');
   const [headerText, setHeaderText] = useState('');
   const [seoText, setSeoText] = useState('');
+  const [companyLogoUrl, setCompanyLogoUrl] = useState('');
+  const [companyImages, setCompanyImages] = useState<string[]>([]);
+  const [newImageUrl, setNewImageUrl] = useState('');
+  const [companyAdText, setCompanyAdText] = useState('');
   const [saved, setSaved] = useState(false);
+
+  const handleAddImage = () => {
+    if (newImageUrl.trim()) {
+      setCompanyImages([...companyImages, newImageUrl.trim()]);
+      setNewImageUrl('');
+    }
+  };
+
+  const handleRemoveImage = (index: number) => {
+    setCompanyImages(companyImages.filter((_, i) => i !== index));
+  };
 
   const handleSave = () => {
     setSaved(true);
@@ -1034,6 +1049,64 @@ function StatePagesEditor({ onClose }: { onClose: () => void }) {
               placeholder="Enter SEO-optimized description for this state page..."
             />
           </div>
+
+          {/* Company Advertising Section */}
+          <h4 className={styles.editorSubtitle}>Company Advertising (State Landing Page Purchaser)</h4>
+
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel}>Company Logo URL</label>
+            <input
+              type="url"
+              className={styles.formInput}
+              value={companyLogoUrl}
+              onChange={(e) => setCompanyLogoUrl(e.target.value)}
+              placeholder="Enter company logo image URL"
+            />
+          </div>
+
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel}>Company Images (Trucks, Equipment, etc.)</label>
+            <div className={styles.imageInputRow}>
+              <input
+                type="url"
+                className={styles.formInput}
+                value={newImageUrl}
+                onChange={(e) => setNewImageUrl(e.target.value)}
+                placeholder="Enter image URL"
+              />
+              <button type="button" className={styles.addImageBtn} onClick={handleAddImage}>Add</button>
+            </div>
+            <div className={styles.imageList}>
+              {companyImages.length === 0 ? (
+                <p className={styles.noImages}>No company images added yet.</p>
+              ) : (
+                companyImages.map((url, index) => (
+                  <div key={index} className={styles.imageItem}>
+                    <span className={styles.imageUrl}>{url}</span>
+                    <button
+                      type="button"
+                      className={styles.removeImageBtn}
+                      onClick={() => handleRemoveImage(index)}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel}>Company Advertisement Text</label>
+            <textarea
+              className={styles.formTextarea}
+              value={companyAdText}
+              onChange={(e) => setCompanyAdText(e.target.value)}
+              rows={4}
+              placeholder="Enter custom advertisement text for the company..."
+            />
+          </div>
+
           <div className={styles.editorActions}>
             <button type="button" className={styles.cancelBtn} onClick={onClose}>Cancel</button>
             <button type="button" className={styles.saveBtn} onClick={handleSave}>
