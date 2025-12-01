@@ -56,38 +56,13 @@ export const hydrovacPackages: HydrovacPackage[] = [
       'Coverage radius display',
       'Click-to-call button',
     ],
+    // Stripe price IDs: Add stripePriceIdMonthly and stripePriceIdAnnual for each tier when integrating Stripe
     pricing: {
-      '1-state': {
-        monthly: 100,
-        annual: 1000,
-        // Stripe price IDs to be added
-        stripePriceIdMonthly: '',
-        stripePriceIdAnnual: '',
-      },
-      '2-4-states': {
-        monthly: 175,
-        annual: 1750,
-        stripePriceIdMonthly: '',
-        stripePriceIdAnnual: '',
-      },
-      '5-10-states': {
-        monthly: 250,
-        annual: 2500,
-        stripePriceIdMonthly: '',
-        stripePriceIdAnnual: '',
-      },
-      '11-25-states': {
-        monthly: 350,
-        annual: 3500,
-        stripePriceIdMonthly: '',
-        stripePriceIdAnnual: '',
-      },
-      'nationwide': {
-        monthly: 400,
-        annual: 4000,
-        stripePriceIdMonthly: '',
-        stripePriceIdAnnual: '',
-      },
+      '1-state': { monthly: 100, annual: 1000 },
+      '2-4-states': { monthly: 175, annual: 1750 },
+      '5-10-states': { monthly: 250, annual: 2500 },
+      '11-25-states': { monthly: 350, annual: 3500 },
+      'nationwide': { monthly: 400, annual: 4000 },
     },
   },
   {
@@ -103,37 +78,13 @@ export const hydrovacPackages: HydrovacPackage[] = [
       'Featured badge',
       'Priority in search results',
     ],
+    // Stripe price IDs: Add stripePriceIdMonthly and stripePriceIdAnnual for each tier when integrating Stripe
     pricing: {
-      '1-state': {
-        monthly: 125,
-        annual: 1250,
-        stripePriceIdMonthly: '',
-        stripePriceIdAnnual: '',
-      },
-      '2-4-states': {
-        monthly: 175,
-        annual: 1750,
-        stripePriceIdMonthly: '',
-        stripePriceIdAnnual: '',
-      },
-      '5-10-states': {
-        monthly: 275,
-        annual: 2750,
-        stripePriceIdMonthly: '',
-        stripePriceIdAnnual: '',
-      },
-      '11-25-states': {
-        monthly: 325,
-        annual: 3250,
-        stripePriceIdMonthly: '',
-        stripePriceIdAnnual: '',
-      },
-      'nationwide': {
-        monthly: 350,
-        annual: 3500,
-        stripePriceIdMonthly: '',
-        stripePriceIdAnnual: '',
-      },
+      '1-state': { monthly: 125, annual: 1250 },
+      '2-4-states': { monthly: 175, annual: 1750 },
+      '5-10-states': { monthly: 275, annual: 2750 },
+      '11-25-states': { monthly: 325, annual: 3250 },
+      'nationwide': { monthly: 350, annual: 3500 },
     },
   },
   {
@@ -149,46 +100,22 @@ export const hydrovacPackages: HydrovacPackage[] = [
       'Maximum visibility',
       'Priority support',
     ],
+    // Stripe price IDs: Add stripePriceIdMonthly and stripePriceIdAnnual for each tier when integrating Stripe
     pricing: {
-      '1-state': {
-        monthly: 150,
-        annual: 1500,
-        stripePriceIdMonthly: '',
-        stripePriceIdAnnual: '',
-      },
-      '2-4-states': {
-        monthly: 175,
-        annual: 1750,
-        stripePriceIdMonthly: '',
-        stripePriceIdAnnual: '',
-      },
-      '5-10-states': {
-        monthly: 225,
-        annual: 2250,
-        stripePriceIdMonthly: '',
-        stripePriceIdAnnual: '',
-      },
-      '11-25-states': {
-        monthly: 325,
-        annual: 3250,
-        stripePriceIdMonthly: '',
-        stripePriceIdAnnual: '',
-      },
-      'nationwide': {
-        monthly: 375,
-        annual: 3750,
-        stripePriceIdMonthly: '',
-        stripePriceIdAnnual: '',
-      },
+      '1-state': { monthly: 150, annual: 1500 },
+      '2-4-states': { monthly: 175, annual: 1750 },
+      '5-10-states': { monthly: 225, annual: 2250 },
+      '11-25-states': { monthly: 325, annual: 3250 },
+      'nationwide': { monthly: 375, annual: 3750 },
     },
   },
 ];
 
 // State Page Ownership pricing
+// Add stripePriceIdAnnual when integrating Stripe
 export const stateOwnership = {
   name: 'State Page Ownership',
   yearlyPrice: 2500,
-  stripePriceIdAnnual: '', // To be added when Stripe is integrated
   features: [
     'Exclusive state page branding',
     'Your company featured at top',
@@ -200,10 +127,10 @@ export const stateOwnership = {
 };
 
 // Disposal Facility Package pricing
+// Add stripePriceIdAnnual when integrating Stripe
 export const disposalPackage = {
   name: 'Disposal Facility Verified',
   yearlyPrice: 1750,
-  stripePriceIdAnnual: '', // To be added when Stripe is integrated
   features: [
     'Green pin on map',
     'Facility profile listing',
