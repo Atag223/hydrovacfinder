@@ -107,23 +107,56 @@
   font-weight: 700;
 }
 
-.comingSoon {
-  padding: 1.5rem;
-  background: linear-gradient(135deg, #d1fae5 0%, #6ee7b7 100%);
+.errorMessage {
+  padding: 1rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.errorMessage p {
+  font-size: 0.875rem;
+  color: #dc2626;
+  margin: 0;
+}
+
+.checkoutButton {
+  width: 100%;
+  padding: 1rem 2rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+  border: none;
   border-radius: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 1rem;
+}
+
+.checkoutButton:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.4);
+}
+
+.checkoutButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.securePayment {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--gray-500);
   margin-bottom: 1.5rem;
 }
 
-.comingSoon p {
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: #166534;
-  margin-bottom: 0.25rem;
-}
-
-.comingSoon span {
-  font-size: 0.875rem;
-  color: #15803d;
+.securePayment svg {
+  color: var(--gray-400);
 }
 
 .backLink {
