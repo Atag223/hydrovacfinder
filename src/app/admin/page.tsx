@@ -996,9 +996,19 @@ function StatePagesEditor({ onClose }: { onClose: () => void }) {
   const [companyAdText, setCompanyAdText] = useState('');
   const [saved, setSaved] = useState(false);
 
+  const isValidUrl = (url: string) => {
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   const handleAddImage = () => {
-    if (newImageUrl.trim()) {
-      setCompanyImages([...companyImages, newImageUrl.trim()]);
+    const trimmedUrl = newImageUrl.trim();
+    if (trimmedUrl && isValidUrl(trimmedUrl) && !companyImages.includes(trimmedUrl)) {
+      setCompanyImages([...companyImages, trimmedUrl]);
       setNewImageUrl('');
     }
   };
