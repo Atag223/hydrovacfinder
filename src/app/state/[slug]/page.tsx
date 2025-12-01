@@ -1,11 +1,13 @@
 'use client';
 
-import { useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useState, Suspense } from 'react';
+import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import Listings from '@/components/Listings';
+import StateCompanyAd from '@/components/StateCompanyAd';
+import StateDisposalSlideshowAd from '@/components/StateDisposalSlideshowAd';
 import { hydroVacCompanies, disposalFacilities } from '@/data/companyData';
 import { FilterType, US_STATES } from '@/types';
 import styles from './page.module.css';
@@ -17,11 +19,13 @@ function formatStateName(slug: string): string {
     .join(' ');
 }
 
-export default function StatePage() {
+function StatePageContent() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const slug = params.slug as string;
   const stateName = formatStateName(slug);
-  const [activeFilter, setActiveFilter] = useState<FilterType>('all');
+  const pageType = searchParams.get('type') as 'hydrovac' | 'disposal' | null;
+  const [activeFilter, setActiveFilter] = useState<FilterType>(pageType || 'all');
 
   // Filter companies and facilities by state
   const stateCompanies = hydroVacCompanies.filter(
@@ -54,6 +58,19 @@ export default function StatePage() {
     );
   }
 
+  // Dynamic title and subtitle based on page type
+  const getTitle = () => {
+    if (pageType === 'hydrovac') return `Hydro-Vac Companies in ${stateName}`;
+    if (pageType === 'disposal') return `Disposal Facilities in ${stateName}`;
+    return `Hydro-Vac Companies & Disposal Facilities in ${stateName}`;
+  };
+
+  const getSubtitle = () => {
+    if (pageType === 'hydrovac') return `Find the best hydro-vac services in ${stateName}`;
+    if (pageType === 'disposal') return `Find disposal sites in ${stateName}`;
+    return `Find the best hydro-vac services and disposal sites in ${stateName}`;
+  };
+
   return (
     <>
       <Navigation />
@@ -61,10 +78,10 @@ export default function StatePage() {
         <section className={styles.hero}>
           <div className={styles.heroContent}>
             <h1 className={styles.title}>
-              Hydro-Vac Companies & Disposal Facilities in {stateName}
+              {getTitle()}
             </h1>
             <p className={styles.subtitle}>
-              Find the best hydro-vac services and disposal sites in {stateName}
+              {getSubtitle()}
             </p>
           </div>
         </section>
@@ -82,18 +99,21 @@ export default function StatePage() {
           </div>
         </section>
 
-        <section className={styles.mapSection}>
-          <div className={styles.container}>
-            <div className={styles.mapPlaceholder}>
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                <circle cx="12" cy="10" r="3" />
-              </svg>
-              <p>{stateName} Map</p>
-              <span>Showing companies and facilities in {stateName}</span>
-            </div>
-          </div>
-        </section>
+        {/* Advertisement Section - Replaces map based on page type */}
+        {pageType === 'hydrovac' && (
+          <StateCompanyAd stateName={stateName} />
+        )}
+        
+        {pageType === 'disposal' && (
+          <StateDisposalSlideshowAd stateName={stateName} />
+        )}
+        
+        {!pageType && (
+          <>
+            <StateCompanyAd stateName={stateName} />
+            <StateDisposalSlideshowAd stateName={stateName} />
+          </>
+        )}
 
         <section className={styles.filterSection}>
           <div className={styles.container}>
@@ -143,5 +163,26 @@ export default function StatePage() {
       </main>
       <Footer />
     </>
+  );
+}
+
+export default function StatePage() {
+  return (
+    <Suspense fallback={
+      <>
+        <Navigation />
+        <main className={styles.main}>
+          <section className={styles.hero}>
+            <div className={styles.heroContent}>
+              <h1 className={styles.title}>Loading...</h1>
+              <p className={styles.subtitle}>Please wait</p>
+            </div>
+          </section>
+        </main>
+        <Footer />
+      </>
+    }>
+      <StatePageContent />
+    </Suspense>
   );
 }
