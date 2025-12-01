@@ -81,10 +81,10 @@ export const hydrovacPackages: HydrovacPackage[] = [
     // Stripe price IDs: Add stripePriceIdMonthly and stripePriceIdAnnual for each tier when integrating Stripe
     pricing: {
       '1-state': { monthly: 125, annual: 1250 },
-      '2-4-states': { monthly: 175, annual: 1750 },
-      '5-10-states': { monthly: 275, annual: 2750 },
-      '11-25-states': { monthly: 325, annual: 3250 },
-      'nationwide': { monthly: 350, annual: 3500 },
+      '2-4-states': { monthly: 219, annual: 2190 },
+      '5-10-states': { monthly: 312, annual: 3120 },
+      '11-25-states': { monthly: 437, annual: 4370 },
+      'nationwide': { monthly: 500, annual: 5000 },
     },
   },
   {
@@ -103,10 +103,10 @@ export const hydrovacPackages: HydrovacPackage[] = [
     // Stripe price IDs: Add stripePriceIdMonthly and stripePriceIdAnnual for each tier when integrating Stripe
     pricing: {
       '1-state': { monthly: 150, annual: 1500 },
-      '2-4-states': { monthly: 175, annual: 1750 },
-      '5-10-states': { monthly: 225, annual: 2250 },
-      '11-25-states': { monthly: 325, annual: 3250 },
-      'nationwide': { monthly: 375, annual: 3750 },
+      '2-4-states': { monthly: 262, annual: 2620 },
+      '5-10-states': { monthly: 375, annual: 3750 },
+      '11-25-states': { monthly: 525, annual: 5250 },
+      'nationwide': { monthly: 600, annual: 6000 },
     },
   },
 ];
