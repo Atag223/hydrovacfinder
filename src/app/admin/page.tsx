@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Navigation from '@/components/Navigation';
 import styles from './page.module.css';
 import { hydroVacCompanies, disposalFacilities } from '@/data/companyData';
@@ -8,6 +8,8 @@ import { DateFilter, HydroVacTier, HydroVacCompany, DisposalFacility, US_STATES 
 
 type AdminTab = 'companies' | 'facilities' | 'analytics' | 'content';
 type ContentSection = 'state-pages' | 'slideshows' | 'pricing' | 'homepage' | null;
+
+const SESSION_AUTH_KEY = 'hydrovac_admin_auth';
 
 const mockAnalytics = {
   today: {
@@ -83,6 +85,63 @@ const mockAnalytics = {
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<AdminTab>('companies');
   const [dateFilter, setDateFilter] = useState<DateFilter>('7days');
+  const [authState, setAuthState] = useState<'loading' | 'unauthenticated' | 'authenticated'>(() => {
+    // Initialize auth state from sessionStorage if available (client-side only)
+    if (typeof window !== 'undefined') {
+      const authStatus = sessionStorage.getItem(SESSION_AUTH_KEY);
+      return authStatus === 'true' ? 'authenticated' : 'unauthenticated';
+    }
+    return 'loading';
+  });
+
+  // Handle hydration mismatch - check auth state after mount
+  useEffect(() => {
+    if (authState === 'loading') {
+      const authStatus = sessionStorage.getItem(SESSION_AUTH_KEY);
+      // Use requestAnimationFrame to avoid the synchronous setState warning
+      requestAnimationFrame(() => {
+        setAuthState(authStatus === 'true' ? 'authenticated' : 'unauthenticated');
+      });
+    }
+  }, [authState]);
+
+  const handleLogin = () => {
+    sessionStorage.setItem(SESSION_AUTH_KEY, 'true');
+    setAuthState('authenticated');
+  };
+
+  const handleLogout = () => {
+    sessionStorage.removeItem(SESSION_AUTH_KEY);
+    setAuthState('unauthenticated');
+  };
+
+  if (authState === 'loading') {
+    return (
+      <>
+        <Navigation isAdmin={true} />
+        <main className={styles.main}>
+          <div className={styles.container}>
+            <div className={styles.loadingContainer}>
+              <p>Loading...</p>
+            </div>
+          </div>
+        </main>
+      </>
+    );
+  }
+
+  if (authState === 'unauthenticated') {
+    return (
+      <>
+        <Navigation isAdmin={true} />
+        <main className={styles.main}>
+          <div className={styles.container}>
+            <LoginForm onSuccess={handleLogin} />
+          </div>
+        </main>
+      </>
+    );
+  }
 
   return (
     <>
@@ -90,8 +149,15 @@ export default function AdminPage() {
       <main className={styles.main}>
         <div className={styles.container}>
           <header className={styles.header}>
-            <h1 className={styles.title}>Admin Dashboard</h1>
-            <p className={styles.subtitle}>Manage companies, facilities, and view analytics</p>
+            <div className={styles.headerTop}>
+              <div>
+                <h1 className={styles.title}>Admin Dashboard</h1>
+                <p className={styles.subtitle}>Manage companies, facilities, and view analytics</p>
+              </div>
+              <button className={styles.logoutBtn} onClick={handleLogout}>
+                Logout
+              </button>
+            </div>
           </header>
 
           <div className={styles.tabs}>
@@ -135,6 +201,75 @@ export default function AdminPage() {
         </div>
       </main>
     </>
+  );
+}
+
+function LoginForm({ onSuccess }: { onSuccess: () => void }) {
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        onSuccess();
+      } else {
+        setError(data.error || 'Invalid password');
+      }
+    } catch {
+      setError('An error occurred. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className={styles.loginContainer}>
+      <div className={styles.loginBox}>
+        <h1 className={styles.loginTitle}>Admin Login</h1>
+        <p className={styles.loginSubtitle}>Enter your password to access the admin dashboard</p>
+        
+        <form onSubmit={handleSubmit} className={styles.loginForm}>
+          <div className={styles.formGroup}>
+            <label htmlFor="password" className={styles.formLabel}>Password</label>
+            <input
+              id="password"
+              type="password"
+              className={styles.formInput}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter admin password"
+              required
+              autoFocus
+            />
+          </div>
+          
+          {error && <p className={styles.loginError}>{error}</p>}
+          
+          <button 
+            type="submit" 
+            className={styles.loginBtn}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Logging in...' : 'Login'}
+          </button>
+        </form>
+      </div>
+    </div>
   );
 }
 
