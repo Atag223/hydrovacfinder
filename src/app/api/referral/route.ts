@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { Resend } from 'resend';
 
 // Email validation regex pattern
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -53,9 +54,52 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check for Resend API key
+    const resendApiKey = process.env.RESEND_API_KEY;
+    if (!resendApiKey) {
+      console.error('RESEND_API_KEY environment variable is not set');
+      return NextResponse.json(
+        { error: 'Email service is not configured. Please contact support.' },
+        { status: 500 }
+      );
+    }
+
+    // Initialize Resend client
+    const resend = new Resend(resendApiKey);
+
     // Format the email content for sending to ap@hydrovacfinder.com
     const emailSubject = `New Referral: ${data.companyName}`;
-    const emailBody = `
+    const emailHtml = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>New Referral Submission</title>
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <h1 style="color: #1e40af; border-bottom: 2px solid #1e40af; padding-bottom: 10px;">New Referral Submission</h1>
+  
+  <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+    <h2 style="color: #1e40af; margin-top: 0;">Company Being Referred</h2>
+    <p><strong>Company Name:</strong> ${data.companyName}</p>
+    <p><strong>Contact Person:</strong> ${data.companyContactPerson}</p>
+    <p><strong>Phone Number:</strong> ${data.companyPhone}</p>
+  </div>
+  
+  <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+    <h2 style="color: #166534; margin-top: 0;">Referrer Information</h2>
+    <p><strong>Name:</strong> ${data.referrerName}</p>
+    <p><strong>Email:</strong> ${data.referrerEmail}</p>
+    <p><strong>Phone:</strong> ${data.referrerPhone}</p>
+  </div>
+  
+  <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
+  <p style="color: #6b7280; font-size: 12px;">This referral was submitted through HydroVacFinder.com</p>
+</body>
+</html>
+    `.trim();
+
+    const emailText = `
 New Referral Submission
 ========================
 
@@ -75,39 +119,22 @@ Phone: ${data.referrerPhone}
 This referral was submitted through HydroVacFinder.com
     `.trim();
 
-    // TODO: Integrate with an email service (e.g., SendGrid, Resend, AWS SES)
-    // to send the referral to ap@hydrovacfinder.com
-    // For now, we store the email content to be sent when email service is configured
-    const emailPayload = {
-      to: 'ap@hydrovacfinder.com',
+    // Send email using Resend
+    const { error: emailError } = await resend.emails.send({
+      from: 'HydroVacFinder <noreply@hydrovacfinder.com>',
+      to: ['ap@hydrovacfinder.com'],
       subject: emailSubject,
-      body: emailBody,
-    };
+      html: emailHtml,
+      text: emailText,
+    });
 
-    // In development, log that a referral was received (without sensitive data)
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`Referral received for company: ${data.companyName}`);
+    if (emailError) {
+      console.error('Failed to send email:', emailError);
+      return NextResponse.json(
+        { error: 'Failed to send referral email. Please try again.' },
+        { status: 500 }
+      );
     }
-
-    // Placeholder for email service integration
-    // When you configure an email service, uncomment and modify:
-    //
-    // const emailResponse = await fetch('https://api.sendgrid.com/v3/mail/send', {
-    //   method: 'POST',
-    //   headers: {
-    //     'Authorization': `Bearer ${process.env.SENDGRID_API_KEY}`,
-    //     'Content-Type': 'application/json',
-    //   },
-    //   body: JSON.stringify({
-    //     personalizations: [{ to: [{ email: emailPayload.to }] }],
-    //     from: { email: 'noreply@hydrovacfinder.com' },
-    //     subject: emailPayload.subject,
-    //     content: [{ type: 'text/plain', value: emailPayload.body }],
-    //   }),
-    // });
-
-    // Ensure emailPayload is used to avoid unused variable warning
-    void emailPayload;
 
     return NextResponse.json({
       success: true,
