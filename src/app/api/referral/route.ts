@@ -11,6 +11,26 @@ function isValidEmail(email: string): boolean {
   return EMAIL_REGEX.test(email);
 }
 
+/**
+ * Escapes HTML special characters to prevent XSS attacks
+ */
+function escapeHtml(unsafe: string): string {
+  return unsafe
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+/**
+ * Sanitizes text for plain text emails by removing control characters
+ */
+function sanitizeText(text: string): string {
+  // Remove control characters except newlines and tabs
+  return text.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+}
+
 interface ReferralFormData {
   // Company being referred
   companyName: string;
@@ -67,8 +87,16 @@ export async function POST(request: NextRequest) {
     // Initialize Resend client
     const resend = new Resend(resendApiKey);
 
+    // Sanitize user input for email templates
+    const safeCompanyName = escapeHtml(data.companyName);
+    const safeCompanyContactPerson = escapeHtml(data.companyContactPerson);
+    const safeCompanyPhone = escapeHtml(data.companyPhone);
+    const safeReferrerName = escapeHtml(data.referrerName);
+    const safeReferrerEmail = escapeHtml(data.referrerEmail);
+    const safeReferrerPhone = escapeHtml(data.referrerPhone);
+
     // Format the email content for sending to ap@hydrovacfinder.com
-    const emailSubject = `New Referral: ${data.companyName}`;
+    const emailSubject = `New Referral: ${sanitizeText(data.companyName)}`;
     const emailHtml = `
 <!DOCTYPE html>
 <html>
@@ -81,16 +109,16 @@ export async function POST(request: NextRequest) {
   
   <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
     <h2 style="color: #1e40af; margin-top: 0;">Company Being Referred</h2>
-    <p><strong>Company Name:</strong> ${data.companyName}</p>
-    <p><strong>Contact Person:</strong> ${data.companyContactPerson}</p>
-    <p><strong>Phone Number:</strong> ${data.companyPhone}</p>
+    <p><strong>Company Name:</strong> ${safeCompanyName}</p>
+    <p><strong>Contact Person:</strong> ${safeCompanyContactPerson}</p>
+    <p><strong>Phone Number:</strong> ${safeCompanyPhone}</p>
   </div>
   
   <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
     <h2 style="color: #166534; margin-top: 0;">Referrer Information</h2>
-    <p><strong>Name:</strong> ${data.referrerName}</p>
-    <p><strong>Email:</strong> ${data.referrerEmail}</p>
-    <p><strong>Phone:</strong> ${data.referrerPhone}</p>
+    <p><strong>Name:</strong> ${safeReferrerName}</p>
+    <p><strong>Email:</strong> ${safeReferrerEmail}</p>
+    <p><strong>Phone:</strong> ${safeReferrerPhone}</p>
   </div>
   
   <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
@@ -99,21 +127,29 @@ export async function POST(request: NextRequest) {
 </html>
     `.trim();
 
+    // Sanitize text for plain text email
+    const textCompanyName = sanitizeText(data.companyName);
+    const textCompanyContactPerson = sanitizeText(data.companyContactPerson);
+    const textCompanyPhone = sanitizeText(data.companyPhone);
+    const textReferrerName = sanitizeText(data.referrerName);
+    const textReferrerEmail = sanitizeText(data.referrerEmail);
+    const textReferrerPhone = sanitizeText(data.referrerPhone);
+
     const emailText = `
 New Referral Submission
 ========================
 
 COMPANY BEING REFERRED
 ----------------------
-Company Name: ${data.companyName}
-Contact Person: ${data.companyContactPerson}
-Phone Number: ${data.companyPhone}
+Company Name: ${textCompanyName}
+Contact Person: ${textCompanyContactPerson}
+Phone Number: ${textCompanyPhone}
 
 REFERRER INFORMATION
 --------------------
-Name: ${data.referrerName}
-Email: ${data.referrerEmail}
-Phone: ${data.referrerPhone}
+Name: ${textReferrerName}
+Email: ${textReferrerEmail}
+Phone: ${textReferrerPhone}
 
 ---
 This referral was submitted through HydroVacFinder.com
