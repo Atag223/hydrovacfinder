@@ -1,4 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { timingSafeEqual } from 'crypto';
+
+// Constant-time string comparison to prevent timing attacks
+function secureCompare(a: string, b: string): boolean {
+  try {
+    const bufferA = Buffer.from(a);
+    const bufferB = Buffer.from(b);
+    
+    // If lengths differ, we still do a comparison to maintain constant time
+    // but we know the result will be false
+    if (bufferA.length !== bufferB.length) {
+      // Compare against itself to maintain constant time
+      timingSafeEqual(bufferA, bufferA);
+      return false;
+    }
+    
+    return timingSafeEqual(bufferA, bufferB);
+  } catch {
+    return false;
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,8 +34,16 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
+
+    // Ensure password is a string before comparison
+    if (typeof password !== 'string') {
+      return NextResponse.json(
+        { error: 'Invalid password format' },
+        { status: 400 }
+      );
+    }
     
-    if (password === adminPassword) {
+    if (secureCompare(password, adminPassword)) {
       return NextResponse.json({ success: true });
     }
     

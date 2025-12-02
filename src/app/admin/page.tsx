@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 import Navigation from '@/components/Navigation';
 import styles from './page.module.css';
 import { hydroVacCompanies, disposalFacilities } from '@/data/companyData';
@@ -10,6 +10,27 @@ type AdminTab = 'companies' | 'facilities' | 'analytics' | 'content';
 type ContentSection = 'state-pages' | 'slideshows' | 'pricing' | 'homepage' | null;
 
 const SESSION_AUTH_KEY = 'hydrovac_admin_auth';
+
+// Custom hook to read authentication state from sessionStorage
+// Returns: 'true' if authenticated, 'false' if not authenticated, null if SSR/loading
+function useSessionAuth() {
+  const getSnapshot = () => {
+    if (typeof window === 'undefined') return null;
+    const value = sessionStorage.getItem(SESSION_AUTH_KEY);
+    // Return 'false' explicitly when no session exists (different from SSR null)
+    return value === 'true' ? 'true' : 'false';
+  };
+  
+  const getServerSnapshot = () => null;
+  
+  const subscribe = (callback: () => void) => {
+    // Listen for storage events (changes from other tabs)
+    window.addEventListener('storage', callback);
+    return () => window.removeEventListener('storage', callback);
+  };
+  
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+}
 
 const mockAnalytics = {
   today: {
@@ -85,35 +106,31 @@ const mockAnalytics = {
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<AdminTab>('companies');
   const [dateFilter, setDateFilter] = useState<DateFilter>('7days');
-  const [authState, setAuthState] = useState<'loading' | 'unauthenticated' | 'authenticated'>(() => {
-    // Initialize auth state from sessionStorage if available (client-side only)
-    if (typeof window !== 'undefined') {
-      const authStatus = sessionStorage.getItem(SESSION_AUTH_KEY);
-      return authStatus === 'true' ? 'authenticated' : 'unauthenticated';
-    }
-    return 'loading';
-  });
-
-  // Handle hydration mismatch - check auth state after mount
-  useEffect(() => {
-    if (authState === 'loading') {
-      const authStatus = sessionStorage.getItem(SESSION_AUTH_KEY);
-      // Use requestAnimationFrame to avoid the synchronous setState warning
-      requestAnimationFrame(() => {
-        setAuthState(authStatus === 'true' ? 'authenticated' : 'unauthenticated');
-      });
-    }
-  }, [authState]);
+  const [forceUpdate, setForceUpdate] = useState(0);
+  
+  // Use useSyncExternalStore to read auth state from sessionStorage
+  const authValue = useSessionAuth();
+  
+  // Derive auth state from the stored value
+  // null means we're on the server or sessionStorage is not available yet
+  const authState: 'loading' | 'unauthenticated' | 'authenticated' = 
+    authValue === null ? 'loading' : 
+    authValue === 'true' ? 'authenticated' : 'unauthenticated';
 
   const handleLogin = () => {
     sessionStorage.setItem(SESSION_AUTH_KEY, 'true');
-    setAuthState('authenticated');
+    // Force a re-render to update auth state
+    setForceUpdate(prev => prev + 1);
   };
 
   const handleLogout = () => {
     sessionStorage.removeItem(SESSION_AUTH_KEY);
-    setAuthState('unauthenticated');
+    // Force a re-render to update auth state
+    setForceUpdate(prev => prev + 1);
   };
+
+  // Suppress unused variable warning
+  void forceUpdate;
 
   if (authState === 'loading') {
     return (
