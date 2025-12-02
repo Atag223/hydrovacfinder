@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
+import { 
+  hydrovacPackages, 
+  type ListingTier, 
+  type CoverageLevel 
+} from '@/data/pricingConfig';
 
 // Validate environment variables
 if (!process.env.STRIPE_SECRET_KEY) {
@@ -21,9 +26,11 @@ interface ProductConfig {
   priceInCents: number;
 }
 
-type ProductType = 'state-company' | 'state-disposal';
+type StaticProductType = 'state-company' | 'state-disposal';
+type HydrovacProductType = `hydrovac-${ListingTier}`;
+type ProductType = StaticProductType | HydrovacProductType;
 
-const productConfigs: Record<ProductType, ProductConfig> = {
+const staticProductConfigs: Record<StaticProductType, ProductConfig> = {
   'state-company': {
     name: 'State Page Company Ownership',
     description: 'Exclusive state page branding and featured placement for 12 months',
@@ -35,6 +42,31 @@ const productConfigs: Record<ProductType, ProductConfig> = {
     priceInCents: 175000, // $1,750
   },
 };
+
+// Get hydrovac package config dynamically
+function getHydrovacProductConfig(
+  tier: ListingTier, 
+  coverage: CoverageLevel, 
+  billingPeriod: 'monthly' | 'annual'
+): ProductConfig | null {
+  const pkg = hydrovacPackages.find(p => p.tier === tier);
+  if (!pkg) return null;
+  
+  const pricing = pkg.pricing[coverage];
+  if (!pricing) return null;
+  
+  const priceInCents = billingPeriod === 'monthly' 
+    ? pricing.monthly * 100 
+    : pricing.annual * 100;
+  
+  const periodLabel = billingPeriod === 'monthly' ? 'Monthly' : 'Annual';
+  
+  return {
+    name: `${pkg.name} Package - ${periodLabel}`,
+    description: `${pkg.name} listing with ${coverage.replace(/-/g, ' ')} coverage`,
+    priceInCents,
+  };
+}
 
 interface CheckoutRequest {
   // Product type for pre-configured products
@@ -92,7 +124,7 @@ export async function POST(request: NextRequest) {
     const origin = request.headers.get('origin') || 'http://localhost:3000';
 
     // Build line items
-    let lineItems: Stripe.Checkout.SessionCreateParams.LineItem[];
+    let lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] | undefined;
     let paymentMode: 'subscription' | 'payment' = mode;
 
     if (priceId) {
@@ -103,27 +135,79 @@ export async function POST(request: NextRequest) {
           quantity: 1,
         },
       ];
-    } else if (productType && productConfigs[productType]) {
-      // Use pre-configured product
-      const config = productConfigs[productType];
-      lineItems = [
-        {
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: config.name,
-              description: config.description,
+    } else if (productType) {
+      // Check if it's a static product or hydrovac product
+      let config: ProductConfig | null = null;
+      
+      if (productType === 'state-company' || productType === 'state-disposal') {
+        // Static product
+        config = staticProductConfigs[productType];
+        paymentMode = 'payment'; // One-time payments for these products
+      } else if (productType.startsWith('hydrovac-')) {
+        // Hydrovac package - extract tier from productType
+        const tier = productType.replace('hydrovac-', '') as ListingTier;
+        const coverage = (metadata.coverage || '1-state') as CoverageLevel;
+        const billingPeriod = (metadata.billingPeriod || 'annual') as 'monthly' | 'annual';
+        
+        config = getHydrovacProductConfig(tier, coverage, billingPeriod);
+        
+        // For monthly billing, use subscription mode with recurring price
+        if (billingPeriod === 'monthly' && config) {
+          lineItems = [
+            {
+              price_data: {
+                currency: 'usd',
+                product_data: {
+                  name: config.name,
+                  description: config.description,
+                },
+                unit_amount: config.priceInCents,
+                recurring: {
+                  interval: 'month',
+                },
+              },
+              quantity: 1,
             },
-            unit_amount: config.priceInCents,
+          ];
+          paymentMode = 'subscription';
+        }
+      }
+      
+      if (!config) {
+        return NextResponse.json(
+          { error: 'Invalid productType' },
+          { status: 400 }
+        );
+      }
+      
+      // Only set lineItems if not already set (for subscription case)
+      if (!lineItems) {
+        lineItems = [
+          {
+            price_data: {
+              currency: 'usd',
+              product_data: {
+                name: config.name,
+                description: config.description,
+              },
+              unit_amount: config.priceInCents,
+            },
+            quantity: 1,
           },
-          quantity: 1,
-        },
-      ];
-      paymentMode = 'payment'; // One-time payments for these products
+        ];
+      }
     } else {
       return NextResponse.json(
         { error: 'Invalid productType' },
         { status: 400 }
+      );
+    }
+    
+    // Ensure lineItems is defined
+    if (!lineItems) {
+      return NextResponse.json(
+        { error: 'Failed to create line items' },
+        { status: 500 }
       );
     }
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import ReferralForm from '@/components/ReferralForm';
@@ -11,12 +12,30 @@ import {
   disposalPackage,
   coverageOptions,
   type CoverageLevel,
+  type ListingTier,
 } from '@/data/pricingConfig';
 
 export default function PricingPage() {
+  const router = useRouter();
   const [isReferralFormOpen, setIsReferralFormOpen] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
   const [selectedCoverage, setSelectedCoverage] = useState<CoverageLevel>('1-state');
+
+  const handleHydrovacCheckout = (tier: ListingTier) => {
+    const params = new URLSearchParams({
+      tier,
+      coverage: selectedCoverage,
+    });
+    router.push(`/checkout/hydrovac?${params.toString()}`);
+  };
+
+  const handleStateOwnershipCheckout = () => {
+    router.push('/checkout/state-company');
+  };
+
+  const handleDisposalCheckout = () => {
+    router.push('/checkout/state-disposal');
+  };
 
   return (
     <>
@@ -141,7 +160,13 @@ export default function PricingPage() {
                       </li>
                     ))}
                   </ul>
-                  <button className={styles.ctaButton}>
+                  <button 
+                    className={styles.ctaButton}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleHydrovacCheckout(pkg.tier);
+                    }}
+                  >
                     Get Started
                   </button>
                 </div>
@@ -174,7 +199,10 @@ export default function PricingPage() {
               <div className={styles.specialPricing}>
                 <span className={styles.specialPrice}>${stateOwnership.yearlyPrice.toLocaleString()}</span>
                 <span className={styles.specialPeriod}>/year</span>
-                <button className={styles.ctaButtonGold}>
+                <button 
+                  className={styles.ctaButtonGold}
+                  onClick={handleStateOwnershipCheckout}
+                >
                   Claim Your State
                 </button>
               </div>
@@ -206,7 +234,10 @@ export default function PricingPage() {
               <div className={styles.specialPricing}>
                 <span className={styles.specialPrice}>${disposalPackage.yearlyPrice.toLocaleString()}</span>
                 <span className={styles.specialPeriod}>/year</span>
-                <button className={styles.ctaButtonGreen}>
+                <button 
+                  className={styles.ctaButtonGreen}
+                  onClick={handleDisposalCheckout}
+                >
                   List Your Facility
                 </button>
               </div>
