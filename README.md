@@ -117,3 +117,131 @@ If webhooks are failing:
 2. For local development, ensure the Stripe CLI is running
 3. For production, verify the webhook URL is correctly configured in Stripe Dashboard
 
+## Deploying to Vercel with Custom Domain (hydrovacfinder.com)
+
+This guide walks you through deploying the HydroVacFinder application to Vercel and connecting your custom domain purchased through Network Solutions.
+
+### Step 1: Deploy to Vercel
+
+1. **Create a Vercel Account**
+   - Go to [vercel.com](https://vercel.com) and sign up (you can use your GitHub account)
+
+2. **Import the GitHub Repository**
+   - Click **"Add New..."** → **"Project"**
+   - Select the `hydrovacfinder` repository from your GitHub account
+   - Click **"Import"**
+
+3. **Configure Environment Variables**
+   Before deploying, add your environment variables in Vercel:
+   - Expand **"Environment Variables"** section
+   - Add each of the following variables:
+     | Name | Value |
+     |------|-------|
+     | `NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN` | Your Mapbox access token |
+     | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Your Stripe publishable key (use `pk_live_...` for production) |
+     | `STRIPE_SECRET_KEY` | Your Stripe secret key (use `sk_live_...` for production) |
+     | `STRIPE_WEBHOOK_SECRET` | Your Stripe webhook secret |
+     | `RESEND_API_KEY` | Your Resend API key |
+
+4. **Deploy**
+   - Click **"Deploy"**
+   - Wait for the build to complete (usually 1-2 minutes)
+   - You'll receive a temporary Vercel URL (e.g., `hydrovacfinder.vercel.app`)
+
+### Step 2: Add Custom Domain in Vercel
+
+1. Go to your project in the [Vercel Dashboard](https://vercel.com/dashboard)
+2. Click on **"Settings"** tab
+3. Click on **"Domains"** in the left sidebar
+4. Enter `hydrovacfinder.com` and click **"Add"**
+5. Vercel will show you the DNS records you need to configure
+6. Also add `www.hydrovacfinder.com` as a domain (Vercel will redirect it to the main domain)
+
+### Step 3: Configure DNS in Network Solutions
+
+1. **Log in to Network Solutions**
+   - Go to [networksolutions.com](https://www.networksolutions.com)
+   - Click **"Manage Account"** and sign in
+
+2. **Access DNS Settings**
+   - Find your domain `hydrovacfinder.com`
+   - Click **"Manage"** next to the domain
+   - Look for **"Advanced DNS"** or **"DNS Management"**
+
+3. **Remove Existing Records (if any)**
+   - If you previously had this domain pointing to Replit, remove those records:
+     - Delete any `A` records pointing to Replit's IP
+     - Delete any `CNAME` records pointing to Replit
+
+4. **Add Vercel DNS Records**
+   
+   Add the following DNS records (verify current values in [Vercel's DNS documentation](https://vercel.com/docs/projects/domains/add-a-domain)):
+
+   **For the root domain (hydrovacfinder.com):**
+   | Type | Host | Value | TTL |
+   |------|------|-------|-----|
+   | A | @ | `76.76.21.21` | 3600 |
+
+   > **Note:** Vercel's IP address may change. When adding your domain in Vercel, it will show you the exact DNS records to configure. Use those values if they differ from the above.
+
+   **For the www subdomain:**
+   | Type | Host | Value | TTL |
+   |------|------|-------|-----|
+   | CNAME | www | `cname.vercel-dns.com` | 3600 |
+
+5. **Save Changes**
+   - Click **"Save"** or **"Apply Changes"**
+
+### Step 4: Verify Domain in Vercel
+
+1. Go back to your Vercel project → **Settings** → **Domains**
+2. Wait for DNS propagation (can take 5 minutes to 48 hours, typically 15-30 minutes)
+3. Vercel will automatically verify your domain and issue an SSL certificate
+4. Once verified, you'll see a green checkmark next to your domain
+
+### Step 5: Update Stripe Webhook URL
+
+Now that your site is live, update Stripe to use the production URL:
+
+1. Go to [Stripe Dashboard](https://dashboard.stripe.com) → **Developers** → **Webhooks**
+2. Click **"Add endpoint"** (or edit existing)
+3. Set the endpoint URL to: `https://hydrovacfinder.com/api/stripe/webhook`
+4. Select the events listed in the "Setting Up Stripe Webhooks" section above
+5. Copy the new webhook signing secret
+6. Update the `STRIPE_WEBHOOK_SECRET` environment variable in Vercel:
+   - Go to Vercel → Project → **Settings** → **Environment Variables**
+   - Update the `STRIPE_WEBHOOK_SECRET` value
+   - Redeploy the application for changes to take effect
+
+### Step 6: Verify Email Domain in Resend (Required for Email)
+
+To send emails from `@hydrovacfinder.com`:
+
+1. Go to [Resend Dashboard](https://resend.com/domains)
+2. Click **"Add Domain"** and enter `hydrovacfinder.com`
+3. Resend will provide DNS records to add
+4. Go back to Network Solutions DNS settings and add:
+   - SPF record (TXT type)
+   - DKIM record (CNAME type)
+5. Return to Resend and click **"Verify"**
+
+### Troubleshooting Deployment
+
+#### Domain Not Connecting
+
+- **DNS Propagation**: Wait up to 48 hours for DNS changes to propagate globally
+- **Check DNS Records**: Use [dnschecker.org](https://dnschecker.org) to verify your DNS records are correct
+- **Clear Browser Cache**: Try accessing the site in incognito/private mode
+
+#### SSL Certificate Issues
+
+- Vercel automatically provisions SSL certificates
+- If you see SSL errors, wait 10-15 minutes for the certificate to be issued
+- Ensure no conflicting DNS records exist
+
+#### Build Failures on Vercel
+
+- Check the build logs in Vercel Dashboard
+- Ensure all environment variables are correctly set
+- Verify the build works locally with `npm run build`
+
