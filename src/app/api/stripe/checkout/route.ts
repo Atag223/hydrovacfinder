@@ -124,7 +124,7 @@ export async function POST(request: NextRequest) {
     const origin = request.headers.get('origin') || 'http://localhost:3000';
 
     // Build line items
-    let lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] | undefined;
+    let lineItems: Stripe.Checkout.SessionCreateParams.LineItem[];
     let paymentMode: 'subscription' | 'payment' = mode;
 
     if (priceId) {
@@ -138,6 +138,7 @@ export async function POST(request: NextRequest) {
     } else if (productType) {
       // Check if it's a static product or hydrovac product
       let config: ProductConfig | null = null;
+      let isMonthlySubscription = false;
       
       if (productType === 'state-company' || productType === 'state-disposal') {
         // Static product
@@ -150,25 +151,9 @@ export async function POST(request: NextRequest) {
         const billingPeriod = (metadata.billingPeriod || 'annual') as 'monthly' | 'annual';
         
         config = getHydrovacProductConfig(tier, coverage, billingPeriod);
+        isMonthlySubscription = billingPeriod === 'monthly';
         
-        // For monthly billing, use subscription mode with recurring price
-        if (billingPeriod === 'monthly' && config) {
-          lineItems = [
-            {
-              price_data: {
-                currency: 'usd',
-                product_data: {
-                  name: config.name,
-                  description: config.description,
-                },
-                unit_amount: config.priceInCents,
-                recurring: {
-                  interval: 'month',
-                },
-              },
-              quantity: 1,
-            },
-          ];
+        if (isMonthlySubscription) {
           paymentMode = 'subscription';
         }
       }
@@ -180,8 +165,25 @@ export async function POST(request: NextRequest) {
         );
       }
       
-      // Only set lineItems if not already set (for subscription case)
-      if (!lineItems) {
+      // Build line items based on payment type
+      if (isMonthlySubscription) {
+        lineItems = [
+          {
+            price_data: {
+              currency: 'usd',
+              product_data: {
+                name: config.name,
+                description: config.description,
+              },
+              unit_amount: config.priceInCents,
+              recurring: {
+                interval: 'month',
+              },
+            },
+            quantity: 1,
+          },
+        ];
+      } else {
         lineItems = [
           {
             price_data: {
@@ -198,16 +200,8 @@ export async function POST(request: NextRequest) {
       }
     } else {
       return NextResponse.json(
-        { error: 'Invalid productType' },
+        { error: 'Either productType or priceId is required' },
         { status: 400 }
-      );
-    }
-    
-    // Ensure lineItems is defined
-    if (!lineItems) {
-      return NextResponse.json(
-        { error: 'Failed to create line items' },
-        { status: 500 }
       );
     }
 
