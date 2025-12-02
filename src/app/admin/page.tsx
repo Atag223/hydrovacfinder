@@ -11,6 +11,9 @@ type ContentSection = 'state-pages' | 'slideshows' | 'pricing' | 'homepage' | nu
 
 const SESSION_AUTH_KEY = 'hydrovac_admin_auth';
 
+// Custom event name for session auth changes
+const SESSION_AUTH_CHANGE_EVENT = 'hydrovac-session-auth-change';
+
 // Custom hook to read authentication state from sessionStorage
 // Returns: 'true' if authenticated, 'false' if not authenticated, null if SSR/loading
 function useSessionAuth() {
@@ -24,12 +27,27 @@ function useSessionAuth() {
   const getServerSnapshot = () => null;
   
   const subscribe = (callback: () => void) => {
-    // Listen for storage events (changes from other tabs)
+    // Listen for storage events (changes from other tabs) and custom events (same tab)
     window.addEventListener('storage', callback);
-    return () => window.removeEventListener('storage', callback);
+    window.addEventListener(SESSION_AUTH_CHANGE_EVENT, callback);
+    return () => {
+      window.removeEventListener('storage', callback);
+      window.removeEventListener(SESSION_AUTH_CHANGE_EVENT, callback);
+    };
   };
   
   return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+}
+
+// Helper function to update session auth and dispatch event
+function setSessionAuth(isAuthenticated: boolean) {
+  if (isAuthenticated) {
+    sessionStorage.setItem(SESSION_AUTH_KEY, 'true');
+  } else {
+    sessionStorage.removeItem(SESSION_AUTH_KEY);
+  }
+  // Dispatch custom event to notify useSyncExternalStore
+  window.dispatchEvent(new Event(SESSION_AUTH_CHANGE_EVENT));
 }
 
 const mockAnalytics = {
@@ -106,7 +124,6 @@ const mockAnalytics = {
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<AdminTab>('companies');
   const [dateFilter, setDateFilter] = useState<DateFilter>('7days');
-  const [forceUpdate, setForceUpdate] = useState(0);
   
   // Use useSyncExternalStore to read auth state from sessionStorage
   const authValue = useSessionAuth();
@@ -118,19 +135,12 @@ export default function AdminPage() {
     authValue === 'true' ? 'authenticated' : 'unauthenticated';
 
   const handleLogin = () => {
-    sessionStorage.setItem(SESSION_AUTH_KEY, 'true');
-    // Force a re-render to update auth state
-    setForceUpdate(prev => prev + 1);
+    setSessionAuth(true);
   };
 
   const handleLogout = () => {
-    sessionStorage.removeItem(SESSION_AUTH_KEY);
-    // Force a re-render to update auth state
-    setForceUpdate(prev => prev + 1);
+    setSessionAuth(false);
   };
-
-  // Suppress unused variable warning
-  void forceUpdate;
 
   if (authState === 'loading') {
     return (
