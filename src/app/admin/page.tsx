@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 import Navigation from '@/components/Navigation';
 import styles from './page.module.css';
 import { hydroVacCompanies, disposalFacilities } from '@/data/companyData';
@@ -8,6 +8,47 @@ import { DateFilter, HydroVacTier, HydroVacCompany, DisposalFacility, US_STATES 
 
 type AdminTab = 'companies' | 'facilities' | 'analytics' | 'content';
 type ContentSection = 'state-pages' | 'slideshows' | 'pricing' | 'homepage' | null;
+
+const SESSION_AUTH_KEY = 'hydrovac_admin_auth';
+
+// Custom event name for session auth changes
+const SESSION_AUTH_CHANGE_EVENT = 'hydrovac-session-auth-change';
+
+// Custom hook to read authentication state from sessionStorage
+// Returns: 'true' if authenticated, 'false' if not authenticated, null if SSR/loading
+function useSessionAuth() {
+  const getSnapshot = () => {
+    if (typeof window === 'undefined') return null;
+    const value = sessionStorage.getItem(SESSION_AUTH_KEY);
+    // Return 'false' explicitly when no session exists (different from SSR null)
+    return value === 'true' ? 'true' : 'false';
+  };
+  
+  const getServerSnapshot = () => null;
+  
+  const subscribe = (callback: () => void) => {
+    // Listen for storage events (changes from other tabs) and custom events (same tab)
+    window.addEventListener('storage', callback);
+    window.addEventListener(SESSION_AUTH_CHANGE_EVENT, callback);
+    return () => {
+      window.removeEventListener('storage', callback);
+      window.removeEventListener(SESSION_AUTH_CHANGE_EVENT, callback);
+    };
+  };
+  
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+}
+
+// Helper function to update session auth and dispatch event
+function setSessionAuth(isAuthenticated: boolean) {
+  if (isAuthenticated) {
+    sessionStorage.setItem(SESSION_AUTH_KEY, 'true');
+  } else {
+    sessionStorage.removeItem(SESSION_AUTH_KEY);
+  }
+  // Dispatch custom event to notify useSyncExternalStore
+  window.dispatchEvent(new Event(SESSION_AUTH_CHANGE_EVENT));
+}
 
 const mockAnalytics = {
   today: {
@@ -83,6 +124,51 @@ const mockAnalytics = {
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<AdminTab>('companies');
   const [dateFilter, setDateFilter] = useState<DateFilter>('7days');
+  
+  // Use useSyncExternalStore to read auth state from sessionStorage
+  const authValue = useSessionAuth();
+  
+  // Derive auth state from the stored value
+  // null means we're on the server or sessionStorage is not available yet
+  const authState: 'loading' | 'unauthenticated' | 'authenticated' = 
+    authValue === null ? 'loading' : 
+    authValue === 'true' ? 'authenticated' : 'unauthenticated';
+
+  const handleLogin = () => {
+    setSessionAuth(true);
+  };
+
+  const handleLogout = () => {
+    setSessionAuth(false);
+  };
+
+  if (authState === 'loading') {
+    return (
+      <>
+        <Navigation isAdmin={true} />
+        <main className={styles.main}>
+          <div className={styles.container}>
+            <div className={styles.loadingContainer}>
+              <p>Loading...</p>
+            </div>
+          </div>
+        </main>
+      </>
+    );
+  }
+
+  if (authState === 'unauthenticated') {
+    return (
+      <>
+        <Navigation isAdmin={true} />
+        <main className={styles.main}>
+          <div className={styles.container}>
+            <LoginForm onSuccess={handleLogin} />
+          </div>
+        </main>
+      </>
+    );
+  }
 
   return (
     <>
@@ -90,8 +176,15 @@ export default function AdminPage() {
       <main className={styles.main}>
         <div className={styles.container}>
           <header className={styles.header}>
-            <h1 className={styles.title}>Admin Dashboard</h1>
-            <p className={styles.subtitle}>Manage companies, facilities, and view analytics</p>
+            <div className={styles.headerTop}>
+              <div>
+                <h1 className={styles.title}>Admin Dashboard</h1>
+                <p className={styles.subtitle}>Manage companies, facilities, and view analytics</p>
+              </div>
+              <button className={styles.logoutBtn} onClick={handleLogout}>
+                Logout
+              </button>
+            </div>
           </header>
 
           <div className={styles.tabs}>
@@ -135,6 +228,75 @@ export default function AdminPage() {
         </div>
       </main>
     </>
+  );
+}
+
+function LoginForm({ onSuccess }: { onSuccess: () => void }) {
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        onSuccess();
+      } else {
+        setError(data.error || 'Invalid password');
+      }
+    } catch {
+      setError('An error occurred. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className={styles.loginContainer}>
+      <div className={styles.loginBox}>
+        <h1 className={styles.loginTitle}>Admin Login</h1>
+        <p className={styles.loginSubtitle}>Enter your password to access the admin dashboard</p>
+        
+        <form onSubmit={handleSubmit} className={styles.loginForm}>
+          <div className={styles.formGroup}>
+            <label htmlFor="password" className={styles.formLabel}>Password</label>
+            <input
+              id="password"
+              type="password"
+              className={styles.formInput}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter admin password"
+              required
+              autoFocus
+            />
+          </div>
+          
+          {error && <p className={styles.loginError}>{error}</p>}
+          
+          <button 
+            type="submit" 
+            className={styles.loginBtn}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Logging in...' : 'Login'}
+          </button>
+        </form>
+      </div>
+    </div>
   );
 }
 
