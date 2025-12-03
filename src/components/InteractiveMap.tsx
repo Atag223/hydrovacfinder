@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { HydroVacCompany, DisposalFacility, FilterType, HYDROVAC_PIN_COLORS, DISPOSAL_PIN_COLOR } from '@/types';
+import { HydroVacCompany, DisposalFacility, FilterType, HYDROVAC_PIN_COLORS, DISPOSAL_PIN_COLOR, SearchLocation } from '@/types';
 import styles from './InteractiveMap.module.css';
 
 interface InteractiveMapProps {
@@ -11,7 +11,7 @@ interface InteractiveMapProps {
   facilities: DisposalFacility[];
   activeFilter: FilterType;
   searchQuery: string;
-  onSearchComplete?: () => void;
+  onSearchComplete?: (location: SearchLocation | null) => void;
 }
 
 interface SelectedItem {
@@ -246,12 +246,15 @@ export default function InteractiveMap({
 
           setSelectedItem(null);
           setPopupPosition(null);
+          
+          // Pass the found coordinates back to the parent
+          onSearchComplete?.({ latitude: lat, longitude: lng });
+        } else {
+          onSearchComplete?.(null);
         }
-        
-        onSearchComplete?.();
       } catch (error) {
         console.error('Geocoding error:', error);
-        onSearchComplete?.();
+        onSearchComplete?.(null);
       }
     };
 

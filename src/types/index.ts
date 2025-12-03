@@ -56,6 +56,39 @@ export type FilterType = 'all' | 'hydrovac' | 'disposal';
 // Search radius options
 export type SearchRadius = 25 | 50 | 75 | 100;
 
+// Search location coordinates
+export interface SearchLocation {
+  latitude: number;
+  longitude: number;
+}
+
+/**
+ * Calculate distance between two coordinates using the Haversine formula
+ * @returns Distance in miles
+ */
+export function calculateDistanceMiles(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
+): number {
+  const R = 3959; // Earth's radius in miles
+  const dLat = toRadians(lat2 - lat1);
+  const dLon = toRadians(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRadians(lat1)) *
+      Math.cos(toRadians(lat2)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+function toRadians(degrees: number): number {
+  return degrees * (Math.PI / 180);
+}
+
 // Membership pricing
 export interface MembershipPackage {
   tier: HydroVacTier | 'state-ownership' | DisposalTier;
