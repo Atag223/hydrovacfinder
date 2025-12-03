@@ -216,12 +216,33 @@ export async function POST(request: NextRequest) {
       sessionMetadata.state = state;
     }
 
+    // Extract tier from productType if it's a hydrovac product
+    let tier = metadata.tier;
+    if (!tier && productType?.startsWith('hydrovac-')) {
+      // Capitalize first letter of tier (e.g., "verified" -> "Verified")
+      const rawTier = productType.replace('hydrovac-', '');
+      tier = rawTier.charAt(0).toUpperCase() + rawTier.slice(1);
+    }
+    if (tier) {
+      sessionMetadata.tier = tier;
+    }
+
+    // Determine success URL - hydrovac products go to onboarding
+    let finalSuccessUrl = successUrl;
+    if (!finalSuccessUrl) {
+      if (productType?.startsWith('hydrovac-')) {
+        finalSuccessUrl = `${origin}/onboarding?session_id={CHECKOUT_SESSION_ID}`;
+      } else {
+        finalSuccessUrl = `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`;
+      }
+    }
+
     // Create checkout session
     const session = await stripe.checkout.sessions.create({
       line_items: lineItems,
       mode: paymentMode,
-      success_url: successUrl || `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: cancelUrl || `${origin}/pricing`,
+      success_url: finalSuccessUrl,
+      cancel_url: cancelUrl || `${origin}/pricing?canceled=true`,
       customer_email: customerEmail,
       metadata: sessionMetadata,
       billing_address_collection: 'required',
