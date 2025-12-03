@@ -59,6 +59,15 @@ export default function InteractiveMap({
       zoom: 3.5,
       minZoom: 2,
       maxZoom: 18,
+      // Constrain map to roughly the US and surrounding areas for better UX
+      maxBounds: [
+        [-180, 10], // Southwest coordinates (west of US, south of US)
+        [-50, 72],  // Northeast coordinates (east of US, north of US including Alaska)
+      ],
+      // Zoom around the center of the viewport for more predictable zoom behavior
+      scrollZoom: { around: 'center' },
+      // Prevent map from showing multiple copies of the world
+      renderWorldCopies: false,
     });
 
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
