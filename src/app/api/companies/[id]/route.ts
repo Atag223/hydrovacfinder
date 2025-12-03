@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { filterValidUrls } from '@/lib/validation';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -32,6 +33,9 @@ export async function PUT(request: Request, { params }: RouteParams) {
     const body = await request.json();
     const { images, ...companyData } = body;
 
+    // Filter to only valid URLs
+    const validImages = images?.length ? filterValidUrls(images) : [];
+
     // Delete existing images and create new ones
     await prisma.companyImage.deleteMany({
       where: { companyId: parseInt(id) },
@@ -41,9 +45,9 @@ export async function PUT(request: Request, { params }: RouteParams) {
       where: { id: parseInt(id) },
       data: {
         ...companyData,
-        images: images?.length
+        images: validImages.length
           ? {
-              create: images.map((url: string) => ({ imageUrl: url })),
+              create: validImages.map((url: string) => ({ imageUrl: url })),
             }
           : undefined,
       },

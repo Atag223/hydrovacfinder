@@ -1583,8 +1583,11 @@ function CompanyModalDB({
                 <input
                   type="number"
                   className={styles.formInput}
-                  value={formData.coverageRadius || ''}
-                  onChange={(e) => setFormData({ ...formData, coverageRadius: parseInt(e.target.value) || null })}
+                  value={formData.coverageRadius ?? ''}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value);
+                    setFormData({ ...formData, coverageRadius: isNaN(val) ? null : val });
+                  }}
                 />
               </div>
               <div className={styles.formGroup}>
@@ -1593,8 +1596,11 @@ function CompanyModalDB({
                   type="number"
                   step="any"
                   className={styles.formInput}
-                  value={formData.latitude || ''}
-                  onChange={(e) => setFormData({ ...formData, latitude: parseFloat(e.target.value) || null })}
+                  value={formData.latitude ?? ''}
+                  onChange={(e) => {
+                    const val = parseFloat(e.target.value);
+                    setFormData({ ...formData, latitude: isNaN(val) ? null : val });
+                  }}
                 />
               </div>
               <div className={styles.formGroup}>
@@ -1603,8 +1609,11 @@ function CompanyModalDB({
                   type="number"
                   step="any"
                   className={styles.formInput}
-                  value={formData.longitude || ''}
-                  onChange={(e) => setFormData({ ...formData, longitude: parseFloat(e.target.value) || null })}
+                  value={formData.longitude ?? ''}
+                  onChange={(e) => {
+                    const val = parseFloat(e.target.value);
+                    setFormData({ ...formData, longitude: isNaN(val) ? null : val });
+                  }}
                 />
               </div>
               <div className={styles.formGroup}>
@@ -1739,8 +1748,11 @@ function FacilityModalDB({
                   type="number"
                   step="any"
                   className={styles.formInput}
-                  value={formData.latitude || ''}
-                  onChange={(e) => setFormData({ ...formData, latitude: parseFloat(e.target.value) || null })}
+                  value={formData.latitude ?? ''}
+                  onChange={(e) => {
+                    const val = parseFloat(e.target.value);
+                    setFormData({ ...formData, latitude: isNaN(val) ? null : val });
+                  }}
                 />
               </div>
               <div className={styles.formGroup}>
@@ -1749,8 +1761,11 @@ function FacilityModalDB({
                   type="number"
                   step="any"
                   className={styles.formInput}
-                  value={formData.longitude || ''}
-                  onChange={(e) => setFormData({ ...formData, longitude: parseFloat(e.target.value) || null })}
+                  value={formData.longitude ?? ''}
+                  onChange={(e) => {
+                    const val = parseFloat(e.target.value);
+                    setFormData({ ...formData, longitude: isNaN(val) ? null : val });
+                  }}
                 />
               </div>
               <div className={styles.formGroupFull}>

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { isValidUrl } from '@/lib/validation';
 
 // GET all disposal slideshow images (optionally filter by state)
 export async function GET(request: Request) {
@@ -22,6 +23,11 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+
+    // Validate URL
+    if (!body.imageUrl || !isValidUrl(body.imageUrl)) {
+      return NextResponse.json({ error: 'Invalid image URL' }, { status: 400 });
+    }
 
     const image = await prisma.disposalSlideshow.create({
       data: body,

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { filterValidUrls } from '@/lib/validation';
 
 // GET all state landing pages
 export async function GET() {
@@ -21,12 +22,15 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { images, ...pageData } = body;
 
+    // Filter to only valid URLs
+    const validImages = images?.length ? filterValidUrls(images) : [];
+
     const page = await prisma.stateLandingPage.create({
       data: {
         ...pageData,
-        images: images?.length
+        images: validImages.length
           ? {
-              create: images.map((url: string) => ({ imageUrl: url })),
+              create: validImages.map((url: string) => ({ imageUrl: url })),
             }
           : undefined,
       },

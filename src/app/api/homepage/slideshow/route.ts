@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { isValidUrl } from '@/lib/validation';
 
 // GET all homepage slideshow images
 export async function GET() {
@@ -18,6 +19,11 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+
+    // Validate URL
+    if (!body.imageUrl || !isValidUrl(body.imageUrl)) {
+      return NextResponse.json({ error: 'Invalid image URL' }, { status: 400 });
+    }
 
     const image = await prisma.homepageSlideshowImage.create({
       data: body,
