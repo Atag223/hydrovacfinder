@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useSyncExternalStore, useCallback } from 'react';
 import Navigation from '@/components/Navigation';
 import styles from './page.module.css';
 import { hydroVacCompanies, disposalFacilities } from '@/data/companyData';
@@ -10,6 +10,25 @@ type AdminTab = 'companies' | 'facilities' | 'analytics' | 'content';
 type ContentSection = 'state-pages' | 'slideshows' | 'pricing' | 'homepage' | null;
 
 const ADMIN_PASSWORD = 'Ajt223';
+
+// Custom hook to sync with sessionStorage using useSyncExternalStore
+function useSessionStorageAuth() {
+  const subscribe = useCallback((callback: () => void) => {
+    // Listen for storage events from other tabs
+    window.addEventListener('storage', callback);
+    return () => window.removeEventListener('storage', callback);
+  }, []);
+  
+  const getSnapshot = useCallback(() => {
+    return sessionStorage.getItem('adminAuthenticated') === 'true';
+  }, []);
+  
+  const getServerSnapshot = useCallback(() => {
+    return false; // Default to not authenticated on server
+  }, []);
+  
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+}
 
 const mockAnalytics = {
   today: {
@@ -85,21 +104,19 @@ const mockAnalytics = {
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<AdminTab>('companies');
   const [dateFilter, setDateFilter] = useState<DateFilter>('7days');
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    // Check sessionStorage for existing authentication on mount
-    if (typeof window !== 'undefined') {
-      return sessionStorage.getItem('adminAuthenticated') === 'true';
-    }
-    return false;
-  });
+  const isAuthenticatedFromStorage = useSessionStorageAuth();
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+
+  // Track manual login to avoid flickering
+  const [hasLoggedIn, setHasLoggedIn] = useState(false);
+  const isAuthenticated = isAuthenticatedFromStorage || hasLoggedIn;
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (password === ADMIN_PASSWORD) {
-      setIsAuthenticated(true);
       sessionStorage.setItem('adminAuthenticated', 'true');
+      setHasLoggedIn(true);
       setError('');
     } else {
       setError('Incorrect password. Please try again.');

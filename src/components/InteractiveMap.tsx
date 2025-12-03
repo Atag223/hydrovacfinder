@@ -34,6 +34,7 @@ export default function InteractiveMap({
   const markersRef = useRef<mapboxgl.Marker[]>([]);
   const hasSetError = useRef(false);
   const detailCardRef = useRef<HTMLDivElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
   const [selectedItem, setSelectedItem] = useState<SelectedItem | null>(null);
   const [popupPosition, setPopupPosition] = useState<{ x: number; y: number; placement: 'above' | 'below' } | null>(null);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
@@ -227,6 +228,12 @@ export default function InteractiveMap({
 
   // Handle search
   useEffect(() => {
+    // Cancel any pending search request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+
     if (!map.current || !searchQuery || !isMapLoaded || !mapboxToken) return;
 
     // Check if the search query matches a US state
@@ -242,13 +249,21 @@ export default function InteractiveMap({
       return;
     }
 
+    // Create new AbortController for this search request
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+
     // Use Mapbox Geocoding API to search for the location
     const geocodeSearch = async () => {
       try {
         const response = await fetch(
-          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchQuery)}.json?country=us&access_token=${mapboxToken}`
+          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchQuery)}.json?country=us&access_token=${mapboxToken}`,
+          { signal: abortController.signal }
         );
         const data = await response.json();
+
+        // Check if this request was aborted
+        if (abortController.signal.aborted) return;
 
         if (data.features && data.features.length > 0) {
           const [lng, lat] = data.features[0].center;
@@ -268,12 +283,20 @@ export default function InteractiveMap({
           onSearchComplete?.(null);
         }
       } catch (error) {
-        console.error('Geocoding error:', error);
-        onSearchComplete?.(null);
+        // Ignore abort errors, log others
+        if (error instanceof Error && error.name !== 'AbortError') {
+          console.error('Geocoding error:', error);
+          onSearchComplete?.(null);
+        }
       }
     };
 
     geocodeSearch();
+
+    // Cleanup: abort the request if the component unmounts or searchQuery changes
+    return () => {
+      abortController.abort();
+    };
   }, [searchQuery, isMapLoaded, onSearchComplete, mapboxToken, router]);
 
   // Get tier label for display
