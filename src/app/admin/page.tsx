@@ -9,6 +9,8 @@ import { DateFilter, HydroVacTier, HydroVacCompany, DisposalFacility, US_STATES 
 type AdminTab = 'companies' | 'facilities' | 'analytics' | 'content';
 type ContentSection = 'state-pages' | 'slideshows' | 'pricing' | 'homepage' | null;
 
+const ADMIN_PASSWORD = 'Ajt223';
+
 const mockAnalytics = {
   today: {
     totalVisits: 1245,
@@ -83,6 +85,61 @@ const mockAnalytics = {
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<AdminTab>('companies');
   const [dateFilter, setDateFilter] = useState<DateFilter>('7days');
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    // Check sessionStorage for existing authentication on mount
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('adminAuthenticated') === 'true';
+    }
+    return false;
+  });
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password === ADMIN_PASSWORD) {
+      setIsAuthenticated(true);
+      sessionStorage.setItem('adminAuthenticated', 'true');
+      setError('');
+    } else {
+      setError('Incorrect password. Please try again.');
+    }
+  };
+
+  // Show login form if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <>
+        <Navigation />
+        <main className={styles.main}>
+          <div className={styles.container}>
+            <div className={styles.loginContainer}>
+              <h1 className={styles.loginTitle}>Admin Login</h1>
+              <p className={styles.loginSubtitle}>Please enter the admin password to continue</p>
+              <form onSubmit={handleLogin} className={styles.loginForm}>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Password</label>
+                  <input
+                    type="password"
+                    className={styles.formInput}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter admin password"
+                    autoFocus
+                    required
+                  />
+                </div>
+                {error && <p className={styles.loginError}>{error}</p>}
+                <button type="submit" className={styles.loginBtn}>
+                  Login
+                </button>
+              </form>
+            </div>
+          </div>
+        </main>
+      </>
+    );
+  }
 
   return (
     <>

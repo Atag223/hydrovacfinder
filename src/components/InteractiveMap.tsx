@@ -1,9 +1,10 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { HydroVacCompany, DisposalFacility, FilterType, HYDROVAC_PIN_COLORS, DISPOSAL_PIN_COLOR, SearchLocation } from '@/types';
+import { HydroVacCompany, DisposalFacility, FilterType, HYDROVAC_PIN_COLORS, DISPOSAL_PIN_COLOR, SearchLocation, US_STATES } from '@/types';
 import styles from './InteractiveMap.module.css';
 
 interface InteractiveMapProps {
@@ -27,6 +28,7 @@ export default function InteractiveMap({
   searchQuery,
   onSearchComplete,
 }: InteractiveMapProps) {
+  const router = useRouter();
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
@@ -227,6 +229,19 @@ export default function InteractiveMap({
   useEffect(() => {
     if (!map.current || !searchQuery || !isMapLoaded || !mapboxToken) return;
 
+    // Check if the search query matches a US state
+    const matchedState = US_STATES.find(
+      state => state.toLowerCase() === searchQuery.trim().toLowerCase()
+    );
+
+    if (matchedState) {
+      // Redirect to the state landing page
+      const stateSlug = matchedState.toLowerCase().replace(/\s+/g, '-');
+      router.push(`/state/${stateSlug}`);
+      onSearchComplete?.(null);
+      return;
+    }
+
     // Use Mapbox Geocoding API to search for the location
     const geocodeSearch = async () => {
       try {
@@ -259,7 +274,7 @@ export default function InteractiveMap({
     };
 
     geocodeSearch();
-  }, [searchQuery, isMapLoaded, onSearchComplete, mapboxToken]);
+  }, [searchQuery, isMapLoaded, onSearchComplete, mapboxToken, router]);
 
   // Get tier label for display
   const getTierLabel = (tier: string) => {

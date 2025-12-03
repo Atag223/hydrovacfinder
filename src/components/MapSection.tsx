@@ -25,6 +25,9 @@ export default function MapSection({ activeFilter, onFilterChange, companies, fa
   const handleUseLocation = () => {
     setIsLocating(true);
     setLocationError('');
+    // Clear previous search results before starting new search
+    setSearchLocation(null);
+    onSearchLocationChange?.(null, searchRadius);
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -49,6 +52,9 @@ export default function MapSection({ activeFilter, onFilterChange, companies, fa
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchInput.trim()) {
+      // Clear previous search results before starting new search
+      setSearchLocation(null);
+      onSearchLocationChange?.(null, searchRadius);
       setActiveSearchQuery(searchInput.trim());
       setIsSearching(true);
     }
