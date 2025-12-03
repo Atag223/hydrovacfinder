@@ -1,3 +1,12 @@
+/**
+ * @deprecated This file is deprecated. Data should now be fetched from Supabase via the API routes.
+ * The API endpoints are:
+ * - GET /api/companies - Fetch all companies
+ * - GET /api/disposals - Fetch all disposal facilities
+ * 
+ * This file is kept temporarily for backward compatibility with pages that haven't been migrated.
+ * Once all pages are updated to use the API, this file can be removed.
+ */
 import { HydroVacCompany, DisposalFacility, HydroVacTier } from '@/types';
 import companiesData from './companies_export.json';
 

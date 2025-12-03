@@ -1,6 +1,13 @@
 /**
  * Pricing Configuration for HydroVacFinder
  * 
+ * @deprecated This file is deprecated. Pricing data should now be fetched from Supabase via the API.
+ * The API endpoint is:
+ * - GET /api/pricing - Fetch all pricing tiers
+ * 
+ * This file is kept temporarily for backward compatibility with pages that haven't been migrated.
+ * Once all pages are updated to use the API, this file can be removed.
+ * 
  * This file contains all pricing tiers and coverage options.
  * Stripe price IDs should be added here once Stripe is integrated.
  */
