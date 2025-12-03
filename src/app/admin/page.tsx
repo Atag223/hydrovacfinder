@@ -1,20 +1,71 @@
 'use client';
 
-import { useState, useSyncExternalStore, useCallback } from 'react';
+import { useState, useSyncExternalStore, useCallback, useEffect } from 'react';
 import Navigation from '@/components/Navigation';
 import styles from './page.module.css';
-import { hydroVacCompanies, disposalFacilities } from '@/data/companyData';
-import { DateFilter, HydroVacTier, HydroVacCompany, DisposalFacility, US_STATES } from '@/types';
+import { DateFilter, HydroVacTier, US_STATES } from '@/types';
 
 type AdminTab = 'companies' | 'facilities' | 'analytics' | 'content';
 type ContentSection = 'state-pages' | 'slideshows' | 'pricing' | 'homepage' | null;
 
 const ADMIN_PASSWORD = 'Ajt223';
 
+// Types for database models
+interface DBCompany {
+  id: number;
+  name: string;
+  city: string;
+  state: string;
+  phone: string | null;
+  website: string | null;
+  tier: string;
+  coverageRadius: number | null;
+  latitude: number | null;
+  longitude: number | null;
+  unionAffiliated: boolean;
+  specialties: string | null;
+  images?: { id: number; imageUrl: string }[];
+}
+
+interface DBDisposalFacility {
+  id: number;
+  name: string;
+  address: string | null;
+  city: string | null;
+  state: string | null;
+  phone: string | null;
+  hours: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  materialsAccepted: string | null;
+}
+
+interface DBStateLandingPage {
+  id: number;
+  state: string;
+  header: string | null;
+  description: string | null;
+  logoUrl: string | null;
+  images?: { id: number; imageUrl: string }[];
+}
+
+interface DBPricingTier {
+  id: number;
+  name: string;
+  monthly: number;
+  annual: number;
+  sortOrder: number;
+}
+
+interface DBSlideshowImage {
+  id: number;
+  imageUrl: string;
+  state?: string;
+}
+
 // Custom hook to sync with sessionStorage using useSyncExternalStore
 function useSessionStorageAuth() {
   const subscribe = useCallback((callback: () => void) => {
-    // Listen for storage events from other tabs
     window.addEventListener('storage', callback);
     return () => window.removeEventListener('storage', callback);
   }, []);
@@ -24,7 +75,7 @@ function useSessionStorageAuth() {
   }, []);
   
   const getServerSnapshot = useCallback(() => {
-    return false; // Default to not authenticated on server
+    return false;
   }, []);
   
   return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
@@ -228,47 +279,110 @@ export default function AdminPage() {
 }
 
 function CompaniesPanel() {
-  const [companies, setCompanies] = useState<HydroVacCompany[]>(hydroVacCompanies);
-  const [editingCompany, setEditingCompany] = useState<HydroVacCompany | null>(null);
-  const [deletingCompany, setDeletingCompany] = useState<HydroVacCompany | null>(null);
+  const [companies, setCompanies] = useState<DBCompany[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editingCompany, setEditingCompany] = useState<DBCompany | null>(null);
+  const [deletingCompany, setDeletingCompany] = useState<DBCompany | null>(null);
   const [isAddingCompany, setIsAddingCompany] = useState(false);
 
-  const handleSaveCompany = (company: HydroVacCompany) => {
-    if (isAddingCompany) {
-      setCompanies([...companies, { ...company, id: `company-${Date.now()}` }]);
-    } else {
-      setCompanies(companies.map(c => c.id === company.id ? company : c));
+  useEffect(() => {
+    fetchCompanies();
+  }, []);
+
+  const fetchCompanies = async () => {
+    try {
+      const response = await fetch('/api/companies');
+      if (response.ok) {
+        const data = await response.json();
+        setCompanies(data);
+      }
+    } catch (error) {
+      console.error('Error fetching companies:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaveCompany = async (company: DBCompany) => {
+    try {
+      const images = company.images?.map(img => img.imageUrl) || [];
+      const payload = {
+        name: company.name,
+        city: company.city,
+        state: company.state,
+        phone: company.phone,
+        website: company.website,
+        tier: company.tier,
+        coverageRadius: company.coverageRadius,
+        latitude: company.latitude,
+        longitude: company.longitude,
+        unionAffiliated: company.unionAffiliated,
+        specialties: company.specialties,
+        images,
+      };
+
+      if (isAddingCompany) {
+        const response = await fetch('/api/companies', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (response.ok) {
+          await fetchCompanies();
+        }
+      } else {
+        const response = await fetch(`/api/companies/${company.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (response.ok) {
+          await fetchCompanies();
+        }
+      }
+    } catch (error) {
+      console.error('Error saving company:', error);
     }
     setEditingCompany(null);
     setIsAddingCompany(false);
   };
 
-  const handleDeleteCompany = (company: HydroVacCompany) => {
-    setCompanies(companies.filter(c => c.id !== company.id));
+  const handleDeleteCompany = async (company: DBCompany) => {
+    try {
+      const response = await fetch(`/api/companies/${company.id}`, {
+        method: 'DELETE',
+      });
+      if (response.ok) {
+        setCompanies(companies.filter(c => c.id !== company.id));
+      }
+    } catch (error) {
+      console.error('Error deleting company:', error);
+    }
     setDeletingCompany(null);
   };
 
   const handleAddClick = () => {
     setIsAddingCompany(true);
     setEditingCompany({
-      id: '',
+      id: 0,
       name: '',
       city: '',
       state: '',
       phone: '',
       website: '',
-      serviceSpecialties: [],
+      tier: 'Basic',
       coverageRadius: 100,
-      unionAffiliation: false,
-      tier: 'basic',
-      latitude: 0,
-      longitude: 0,
-      profileViews: 0,
-      clickToCalls: 0,
-      websiteClicks: 0,
-      directionRequests: 0,
+      latitude: null,
+      longitude: null,
+      unionAffiliated: false,
+      specialties: '',
+      images: [],
     });
   };
+
+  if (loading) {
+    return <div className={styles.panel}><p>Loading companies...</p></div>;
+  }
 
   return (
     <div className={styles.panel}>
@@ -293,9 +407,9 @@ function CompaniesPanel() {
                 <td>{company.name}</td>
                 <td>{company.city}, {company.state}</td>
                 <td>
-                  <TierBadge tier={company.tier} />
+                  <TierBadge tier={company.tier.toLowerCase() as HydroVacTier} />
                 </td>
-                <td>{company.unionAffiliation ? `Yes - ${company.unionLocalNumber}` : 'No'}</td>
+                <td>{company.unionAffiliated ? 'Yes' : 'No'}</td>
                 <td>
                   <div className={styles.actions}>
                     <button className={styles.editBtn} onClick={() => setEditingCompany(company)}>Edit</button>
@@ -310,7 +424,7 @@ function CompaniesPanel() {
 
       {/* Edit/Add Company Modal */}
       {editingCompany && (
-        <CompanyModal
+        <CompanyModalDB
           company={editingCompany}
           isNew={isAddingCompany}
           onSave={handleSaveCompany}
@@ -332,49 +446,103 @@ function CompaniesPanel() {
 }
 
 function FacilitiesPanel() {
-  const [facilities, setFacilities] = useState<DisposalFacility[]>(disposalFacilities);
-  const [editingFacility, setEditingFacility] = useState<DisposalFacility | null>(null);
-  const [deletingFacility, setDeletingFacility] = useState<DisposalFacility | null>(null);
-  const [managingImages, setManagingImages] = useState<DisposalFacility | null>(null);
+  const [facilities, setFacilities] = useState<DBDisposalFacility[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editingFacility, setEditingFacility] = useState<DBDisposalFacility | null>(null);
+  const [deletingFacility, setDeletingFacility] = useState<DBDisposalFacility | null>(null);
   const [isAddingFacility, setIsAddingFacility] = useState(false);
 
-  const handleSaveFacility = (facility: DisposalFacility) => {
-    if (isAddingFacility) {
-      setFacilities([...facilities, { ...facility, id: `facility-${Date.now()}` }]);
-    } else {
-      setFacilities(facilities.map(f => f.id === facility.id ? facility : f));
+  useEffect(() => {
+    fetchFacilities();
+  }, []);
+
+  const fetchFacilities = async () => {
+    try {
+      const response = await fetch('/api/disposals');
+      if (response.ok) {
+        const data = await response.json();
+        setFacilities(data);
+      }
+    } catch (error) {
+      console.error('Error fetching facilities:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaveFacility = async (facility: DBDisposalFacility) => {
+    try {
+      const payload = {
+        name: facility.name,
+        address: facility.address,
+        city: facility.city,
+        state: facility.state,
+        phone: facility.phone,
+        hours: facility.hours,
+        latitude: facility.latitude,
+        longitude: facility.longitude,
+        materialsAccepted: facility.materialsAccepted,
+      };
+
+      if (isAddingFacility) {
+        const response = await fetch('/api/disposals', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (response.ok) {
+          await fetchFacilities();
+        }
+      } else {
+        const response = await fetch(`/api/disposals/${facility.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (response.ok) {
+          await fetchFacilities();
+        }
+      }
+    } catch (error) {
+      console.error('Error saving facility:', error);
     }
     setEditingFacility(null);
     setIsAddingFacility(false);
   };
 
-  const handleDeleteFacility = (facility: DisposalFacility) => {
-    setFacilities(facilities.filter(f => f.id !== facility.id));
+  const handleDeleteFacility = async (facility: DBDisposalFacility) => {
+    try {
+      const response = await fetch(`/api/disposals/${facility.id}`, {
+        method: 'DELETE',
+      });
+      if (response.ok) {
+        setFacilities(facilities.filter(f => f.id !== facility.id));
+      }
+    } catch (error) {
+      console.error('Error deleting facility:', error);
+    }
     setDeletingFacility(null);
-  };
-
-  const handleSaveImages = (facility: DisposalFacility, images: string[]) => {
-    setFacilities(facilities.map(f => f.id === facility.id ? { ...f, images } : f));
-    setManagingImages(null);
   };
 
   const handleAddClick = () => {
     setIsAddingFacility(true);
     setEditingFacility({
-      id: '',
+      id: 0,
       name: '',
       address: '',
       city: '',
       state: '',
-      materialsAccepted: [],
-      hours: '',
       phone: '',
-      tier: 'verified',
-      latitude: 0,
-      longitude: 0,
-      clicks: 0,
+      hours: '',
+      latitude: null,
+      longitude: null,
+      materialsAccepted: '',
     });
   };
+
+  if (loading) {
+    return <div className={styles.panel}><p>Loading facilities...</p></div>;
+  }
 
   return (
     <div className={styles.panel}>
@@ -401,7 +569,6 @@ function FacilitiesPanel() {
                 <td>
                   <div className={styles.actions}>
                     <button className={styles.editBtn} onClick={() => setEditingFacility(facility)}>Edit</button>
-                    <button className={styles.imageBtn} onClick={() => setManagingImages(facility)}>Images</button>
                     <button className={styles.deleteBtn} onClick={() => setDeletingFacility(facility)}>Delete</button>
                   </div>
                 </td>
@@ -413,7 +580,7 @@ function FacilitiesPanel() {
 
       {/* Edit/Add Facility Modal */}
       {editingFacility && (
-        <FacilityModal
+        <FacilityModalDB
           facility={editingFacility}
           isNew={isAddingFacility}
           onSave={handleSaveFacility}
@@ -428,15 +595,6 @@ function FacilitiesPanel() {
           message={`Are you sure you want to delete "${deletingFacility.name}"? This action cannot be undone.`}
           onConfirm={() => handleDeleteFacility(deletingFacility)}
           onCancel={() => setDeletingFacility(null)}
-        />
-      )}
-
-      {/* Images Management Modal */}
-      {managingImages && (
-        <ImagesModal
-          facility={managingImages}
-          onSave={(images) => handleSaveImages(managingImages, images)}
-          onClose={() => setManagingImages(null)}
         />
       )}
     </div>
@@ -663,394 +821,6 @@ function DeleteConfirmModal({
   );
 }
 
-function CompanyModal({
-  company,
-  isNew,
-  onSave,
-  onClose,
-}: {
-  company: HydroVacCompany;
-  isNew: boolean;
-  onSave: (company: HydroVacCompany) => void;
-  onClose: () => void;
-}) {
-  const [formData, setFormData] = useState<HydroVacCompany>(company);
-  const [specialtiesInput, setSpecialtiesInput] = useState(company.serviceSpecialties.join(', '));
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSave({
-      ...formData,
-      serviceSpecialties: specialtiesInput.split(',').map(s => s.trim()).filter(Boolean),
-    });
-  };
-
-  return (
-    <div className={styles.modalOverlay} onClick={onClose}>
-      <div className={styles.modalLarge} onClick={(e) => e.stopPropagation()}>
-        <div className={styles.modalHeader}>
-          <h3 className={styles.modalTitle}>{isNew ? 'Add Company' : 'Edit Company'}</h3>
-          <button className={styles.closeBtn} onClick={onClose}>×</button>
-        </div>
-        <form onSubmit={handleSubmit}>
-          <div className={styles.modalBody}>
-            <div className={styles.formGrid}>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Company Name</label>
-                <input
-                  type="text"
-                  className={styles.formInput}
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  required
-                />
-              </div>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>City</label>
-                <input
-                  type="text"
-                  className={styles.formInput}
-                  value={formData.city}
-                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                  required
-                />
-              </div>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>State</label>
-                <select
-                  className={styles.formSelect}
-                  value={formData.state}
-                  onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                  required
-                >
-                  <option value="">Select State</option>
-                  {US_STATES.map(state => (
-                    <option key={state} value={state}>{state}</option>
-                  ))}
-                </select>
-              </div>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Phone</label>
-                <input
-                  type="tel"
-                  className={styles.formInput}
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  required
-                />
-              </div>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Website</label>
-                <input
-                  type="url"
-                  className={styles.formInput}
-                  value={formData.website}
-                  onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                />
-              </div>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Tier</label>
-                <select
-                  className={styles.formSelect}
-                  value={formData.tier}
-                  onChange={(e) => setFormData({ ...formData, tier: e.target.value as HydroVacTier })}
-                >
-                  <option value="basic">Basic</option>
-                  <option value="verified">Verified</option>
-                  <option value="featured">Featured</option>
-                  <option value="premium">Premium</option>
-                </select>
-              </div>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Coverage Radius (miles)</label>
-                <input
-                  type="number"
-                  className={styles.formInput}
-                  value={formData.coverageRadius}
-                  onChange={(e) => setFormData({ ...formData, coverageRadius: parseInt(e.target.value) || 0 })}
-                />
-              </div>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Latitude</label>
-                <input
-                  type="number"
-                  step="any"
-                  className={styles.formInput}
-                  value={formData.latitude}
-                  onChange={(e) => setFormData({ ...formData, latitude: parseFloat(e.target.value) || 0 })}
-                />
-              </div>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Longitude</label>
-                <input
-                  type="number"
-                  step="any"
-                  className={styles.formInput}
-                  value={formData.longitude}
-                  onChange={(e) => setFormData({ ...formData, longitude: parseFloat(e.target.value) || 0 })}
-                />
-              </div>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>
-                  <input
-                    type="checkbox"
-                    checked={formData.unionAffiliation}
-                    onChange={(e) => setFormData({ ...formData, unionAffiliation: e.target.checked })}
-                  />{' '}
-                  Union Affiliated
-                </label>
-              </div>
-              {formData.unionAffiliation && (
-                <div className={styles.formGroup}>
-                  <label className={styles.formLabel}>Union Local Number</label>
-                  <input
-                    type="text"
-                    className={styles.formInput}
-                    value={formData.unionLocalNumber || ''}
-                    onChange={(e) => setFormData({ ...formData, unionLocalNumber: e.target.value })}
-                  />
-                </div>
-              )}
-              <div className={styles.formGroupFull}>
-                <label className={styles.formLabel}>Service Specialties (comma-separated)</label>
-                <input
-                  type="text"
-                  className={styles.formInput}
-                  value={specialtiesInput}
-                  onChange={(e) => setSpecialtiesInput(e.target.value)}
-                  placeholder="Hydro Excavation, Daylighting, Potholing"
-                />
-              </div>
-            </div>
-          </div>
-          <div className={styles.modalFooter}>
-            <button type="button" className={styles.cancelBtn} onClick={onClose}>Cancel</button>
-            <button type="submit" className={styles.saveBtn}>
-              {isNew ? 'Add Company' : 'Save Changes'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-}
-
-function FacilityModal({
-  facility,
-  isNew,
-  onSave,
-  onClose,
-}: {
-  facility: DisposalFacility;
-  isNew: boolean;
-  onSave: (facility: DisposalFacility) => void;
-  onClose: () => void;
-}) {
-  const [formData, setFormData] = useState<DisposalFacility>(facility);
-  const [materialsInput, setMaterialsInput] = useState(facility.materialsAccepted.join(', '));
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSave({
-      ...formData,
-      materialsAccepted: materialsInput.split(',').map(s => s.trim()).filter(Boolean),
-    });
-  };
-
-  return (
-    <div className={styles.modalOverlay} onClick={onClose}>
-      <div className={styles.modalLarge} onClick={(e) => e.stopPropagation()}>
-        <div className={styles.modalHeader}>
-          <h3 className={styles.modalTitle}>{isNew ? 'Add Facility' : 'Edit Facility'}</h3>
-          <button className={styles.closeBtn} onClick={onClose}>×</button>
-        </div>
-        <form onSubmit={handleSubmit}>
-          <div className={styles.modalBody}>
-            <div className={styles.formGrid}>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Facility Name</label>
-                <input
-                  type="text"
-                  className={styles.formInput}
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  required
-                />
-              </div>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Address</label>
-                <input
-                  type="text"
-                  className={styles.formInput}
-                  value={formData.address}
-                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                  required
-                />
-              </div>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>City</label>
-                <input
-                  type="text"
-                  className={styles.formInput}
-                  value={formData.city}
-                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                  required
-                />
-              </div>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>State</label>
-                <select
-                  className={styles.formSelect}
-                  value={formData.state}
-                  onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                  required
-                >
-                  <option value="">Select State</option>
-                  {US_STATES.map(state => (
-                    <option key={state} value={state}>{state}</option>
-                  ))}
-                </select>
-              </div>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Phone</label>
-                <input
-                  type="tel"
-                  className={styles.formInput}
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  required
-                />
-              </div>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Hours</label>
-                <input
-                  type="text"
-                  className={styles.formInput}
-                  value={formData.hours}
-                  onChange={(e) => setFormData({ ...formData, hours: e.target.value })}
-                  placeholder="Mon-Fri: 6AM-5PM"
-                />
-              </div>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Latitude</label>
-                <input
-                  type="number"
-                  step="any"
-                  className={styles.formInput}
-                  value={formData.latitude}
-                  onChange={(e) => setFormData({ ...formData, latitude: parseFloat(e.target.value) || 0 })}
-                />
-              </div>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Longitude</label>
-                <input
-                  type="number"
-                  step="any"
-                  className={styles.formInput}
-                  value={formData.longitude}
-                  onChange={(e) => setFormData({ ...formData, longitude: parseFloat(e.target.value) || 0 })}
-                />
-              </div>
-              <div className={styles.formGroupFull}>
-                <label className={styles.formLabel}>Materials Accepted (comma-separated)</label>
-                <input
-                  type="text"
-                  className={styles.formInput}
-                  value={materialsInput}
-                  onChange={(e) => setMaterialsInput(e.target.value)}
-                  placeholder="Drilling Mud, Industrial Waste, Contaminated Soil"
-                />
-              </div>
-            </div>
-          </div>
-          <div className={styles.modalFooter}>
-            <button type="button" className={styles.cancelBtn} onClick={onClose}>Cancel</button>
-            <button type="submit" className={styles.saveBtn}>
-              {isNew ? 'Add Facility' : 'Save Changes'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-}
-
-function ImagesModal({
-  facility,
-  onSave,
-  onClose,
-}: {
-  facility: DisposalFacility;
-  onSave: (images: string[]) => void;
-  onClose: () => void;
-}) {
-  const [images, setImages] = useState<string[]>(facility.images || []);
-  const [newImageUrl, setNewImageUrl] = useState('');
-
-  const handleAddImage = () => {
-    if (newImageUrl.trim()) {
-      setImages([...images, newImageUrl.trim()]);
-      setNewImageUrl('');
-    }
-  };
-
-  const handleRemoveImage = (index: number) => {
-    setImages(images.filter((_, i) => i !== index));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSave(images);
-  };
-
-  return (
-    <div className={styles.modalOverlay} onClick={onClose}>
-      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-        <div className={styles.modalHeader}>
-          <h3 className={styles.modalTitle}>Manage Images - {facility.name}</h3>
-          <button className={styles.closeBtn} onClick={onClose}>×</button>
-        </div>
-        <form onSubmit={handleSubmit}>
-          <div className={styles.modalBody}>
-            <div className={styles.imageInputRow}>
-              <input
-                type="url"
-                className={styles.formInput}
-                value={newImageUrl}
-                onChange={(e) => setNewImageUrl(e.target.value)}
-                placeholder="Enter image URL"
-              />
-              <button type="button" className={styles.addImageBtn} onClick={handleAddImage}>Add</button>
-            </div>
-            <div className={styles.imageList}>
-              {images.length === 0 ? (
-                <p className={styles.noImages}>No images added yet.</p>
-              ) : (
-                images.map((url, index) => (
-                  <div key={index} className={styles.imageItem}>
-                    <span className={styles.imageUrl}>{url}</span>
-                    <button
-                      type="button"
-                      className={styles.removeImageBtn}
-                      onClick={() => handleRemoveImage(index)}
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-          <div className={styles.modalFooter}>
-            <button type="button" className={styles.cancelBtn} onClick={onClose}>Cancel</button>
-            <button type="submit" className={styles.saveBtn}>Save Images</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-}
-
 function ContentModal({
   title,
   onClose,
@@ -1077,13 +847,51 @@ function ContentModal({
 
 function StatePagesEditor({ onClose }: { onClose: () => void }) {
   const [selectedState, setSelectedState] = useState('');
+  const [pages, setPages] = useState<DBStateLandingPage[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState<DBStateLandingPage | null>(null);
   const [headerText, setHeaderText] = useState('');
   const [seoText, setSeoText] = useState('');
   const [companyLogoUrl, setCompanyLogoUrl] = useState('');
   const [companyImages, setCompanyImages] = useState<string[]>([]);
   const [newImageUrl, setNewImageUrl] = useState('');
-  const [companyAdText, setCompanyAdText] = useState('');
   const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    fetchPages();
+  }, []);
+
+  const fetchPages = async () => {
+    try {
+      const response = await fetch('/api/state');
+      if (response.ok) {
+        const data = await response.json();
+        setPages(data);
+      }
+    } catch (error) {
+      console.error('Error fetching state pages:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleStateChange = (state: string) => {
+    setSelectedState(state);
+    const page = pages.find(p => p.state === state);
+    if (page) {
+      setCurrentPage(page);
+      setHeaderText(page.header || '');
+      setSeoText(page.description || '');
+      setCompanyLogoUrl(page.logoUrl || '');
+      setCompanyImages(page.images?.map(img => img.imageUrl) || []);
+    } else {
+      setCurrentPage(null);
+      setHeaderText('');
+      setSeoText('');
+      setCompanyLogoUrl('');
+      setCompanyImages([]);
+    }
+  };
 
   const isValidUrl = (url: string) => {
     try {
@@ -1106,10 +914,41 @@ function StatePagesEditor({ onClose }: { onClose: () => void }) {
     setCompanyImages(companyImages.filter((_, i) => i !== index));
   };
 
-  const handleSave = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  const handleSave = async () => {
+    try {
+      const payload = {
+        state: selectedState,
+        header: headerText,
+        description: seoText,
+        logoUrl: companyLogoUrl,
+        images: companyImages,
+      };
+
+      if (currentPage) {
+        await fetch(`/api/state/${currentPage.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+      } else {
+        await fetch('/api/state', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+      }
+      
+      await fetchPages();
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (error) {
+      console.error('Error saving state page:', error);
+    }
   };
+
+  if (loading) {
+    return <div className={styles.editorContent}><p>Loading...</p></div>;
+  }
 
   return (
     <div className={styles.editorContent}>
@@ -1118,7 +957,7 @@ function StatePagesEditor({ onClose }: { onClose: () => void }) {
         <select
           className={styles.formSelect}
           value={selectedState}
-          onChange={(e) => setSelectedState(e.target.value)}
+          onChange={(e) => handleStateChange(e.target.value)}
         >
           <option value="">Choose a state to edit</option>
           {US_STATES.map(state => (
@@ -1195,17 +1034,6 @@ function StatePagesEditor({ onClose }: { onClose: () => void }) {
             </div>
           </div>
 
-          <div className={styles.formGroup}>
-            <label className={styles.formLabel}>Company Advertisement Text</label>
-            <textarea
-              className={styles.formTextarea}
-              value={companyAdText}
-              onChange={(e) => setCompanyAdText(e.target.value)}
-              rows={4}
-              placeholder="Enter custom advertisement text for the company..."
-            />
-          </div>
-
           <div className={styles.editorActions}>
             <button type="button" className={styles.cancelBtn} onClick={onClose}>Cancel</button>
             <button type="button" className={styles.saveBtn} onClick={handleSave}>
@@ -1220,19 +1048,64 @@ function StatePagesEditor({ onClose }: { onClose: () => void }) {
 
 function SlideshowsEditor({ onClose }: { onClose: () => void }) {
   const [selectedState, setSelectedState] = useState('');
-  const [images, setImages] = useState<string[]>([]);
+  const [images, setImages] = useState<DBSlideshowImage[]>([]);
+  const [loading, setLoading] = useState(false);
   const [newImageUrl, setNewImageUrl] = useState('');
   const [saved, setSaved] = useState(false);
 
-  const handleAddImage = () => {
-    if (newImageUrl.trim()) {
-      setImages([...images, newImageUrl.trim()]);
-      setNewImageUrl('');
+  const fetchImages = async (state: string) => {
+    if (!state) {
+      setImages([]);
+      return;
+    }
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/disposals/slideshow?state=${encodeURIComponent(state)}`);
+      if (response.ok) {
+        const data = await response.json();
+        setImages(data);
+      }
+    } catch (error) {
+      console.error('Error fetching slideshow images:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleRemoveImage = (index: number) => {
-    setImages(images.filter((_, i) => i !== index));
+  const handleStateChange = (state: string) => {
+    setSelectedState(state);
+    fetchImages(state);
+  };
+
+  const handleAddImage = async () => {
+    if (!newImageUrl.trim() || !selectedState) return;
+    try {
+      const response = await fetch('/api/disposals/slideshow', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ state: selectedState, imageUrl: newImageUrl.trim() }),
+      });
+      if (response.ok) {
+        const newImage = await response.json();
+        setImages([...images, newImage]);
+        setNewImageUrl('');
+      }
+    } catch (error) {
+      console.error('Error adding slideshow image:', error);
+    }
+  };
+
+  const handleRemoveImage = async (id: number) => {
+    try {
+      const response = await fetch(`/api/disposals/slideshow/${id}`, {
+        method: 'DELETE',
+      });
+      if (response.ok) {
+        setImages(images.filter(img => img.id !== id));
+      }
+    } catch (error) {
+      console.error('Error removing slideshow image:', error);
+    }
   };
 
   const handleSave = () => {
@@ -1247,7 +1120,7 @@ function SlideshowsEditor({ onClose }: { onClose: () => void }) {
         <select
           className={styles.formSelect}
           value={selectedState}
-          onChange={(e) => setSelectedState(e.target.value)}
+          onChange={(e) => handleStateChange(e.target.value)}
         >
           <option value="">Choose a state to manage slideshows</option>
           {US_STATES.map(state => (
@@ -1257,40 +1130,46 @@ function SlideshowsEditor({ onClose }: { onClose: () => void }) {
       </div>
       {selectedState && (
         <>
-          <div className={styles.imageInputRow}>
-            <input
-              type="url"
-              className={styles.formInput}
-              value={newImageUrl}
-              onChange={(e) => setNewImageUrl(e.target.value)}
-              placeholder="Enter image URL"
-            />
-            <button type="button" className={styles.addImageBtn} onClick={handleAddImage}>Add</button>
-          </div>
-          <div className={styles.imageList}>
-            {images.length === 0 ? (
-              <p className={styles.noImages}>No slideshow images for {selectedState}.</p>
-            ) : (
-              images.map((url, index) => (
-                <div key={index} className={styles.imageItem}>
-                  <span className={styles.imageUrl}>{url}</span>
-                  <button
-                    type="button"
-                    className={styles.removeImageBtn}
-                    onClick={() => handleRemoveImage(index)}
-                  >
-                    ×
-                  </button>
-                </div>
-              ))
-            )}
-          </div>
-          <div className={styles.editorActions}>
-            <button type="button" className={styles.cancelBtn} onClick={onClose}>Cancel</button>
-            <button type="button" className={styles.saveBtn} onClick={handleSave}>
-              {saved ? 'Saved!' : 'Save Changes'}
-            </button>
-          </div>
+          {loading ? (
+            <p>Loading...</p>
+          ) : (
+            <>
+              <div className={styles.imageInputRow}>
+                <input
+                  type="url"
+                  className={styles.formInput}
+                  value={newImageUrl}
+                  onChange={(e) => setNewImageUrl(e.target.value)}
+                  placeholder="Enter image URL"
+                />
+                <button type="button" className={styles.addImageBtn} onClick={handleAddImage}>Add</button>
+              </div>
+              <div className={styles.imageList}>
+                {images.length === 0 ? (
+                  <p className={styles.noImages}>No slideshow images for {selectedState}.</p>
+                ) : (
+                  images.map((img) => (
+                    <div key={img.id} className={styles.imageItem}>
+                      <span className={styles.imageUrl}>{img.imageUrl}</span>
+                      <button
+                        type="button"
+                        className={styles.removeImageBtn}
+                        onClick={() => handleRemoveImage(img.id)}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+              <div className={styles.editorActions}>
+                <button type="button" className={styles.cancelBtn} onClick={onClose}>Cancel</button>
+                <button type="button" className={styles.saveBtn} onClick={handleSave}>
+                  {saved ? 'Saved!' : 'Save Changes'}
+                </button>
+              </div>
+            </>
+          )}
         </>
       )}
     </div>
@@ -1298,57 +1177,106 @@ function SlideshowsEditor({ onClose }: { onClose: () => void }) {
 }
 
 function PricingEditor({ onClose }: { onClose: () => void }) {
-  const [basicPrice, setBasicPrice] = useState('0');
-  const [verifiedPrice, setVerifiedPrice] = useState('99');
-  const [featuredPrice, setFeaturedPrice] = useState('199');
-  const [premiumPrice, setPremiumPrice] = useState('399');
+  const [loading, setLoading] = useState(true);
+  const [tiers, setTiers] = useState<DBPricingTier[]>([]);
   const [saved, setSaved] = useState(false);
 
-  const handleSave = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  useEffect(() => {
+    fetchTiers();
+  }, []);
+
+  const fetchTiers = async () => {
+    try {
+      const response = await fetch('/api/pricing');
+      if (response.ok) {
+        const data = await response.json();
+        if (data.length === 0) {
+          // Create default tiers if none exist
+          const defaultTiers = [
+            { name: 'Basic', monthly: 0, annual: 0, sortOrder: 1 },
+            { name: 'Verified', monthly: 99, annual: 990, sortOrder: 2 },
+            { name: 'Featured', monthly: 199, annual: 1990, sortOrder: 3 },
+            { name: 'Premium', monthly: 399, annual: 3990, sortOrder: 4 },
+          ];
+          setTiers(defaultTiers.map((t, i) => ({ ...t, id: -(i + 1) })) as DBPricingTier[]);
+        } else {
+          setTiers(data);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching pricing tiers:', error);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const handleTierChange = (id: number, field: string, value: number) => {
+    setTiers(tiers.map(t => t.id === id ? { ...t, [field]: value } : t));
+  };
+
+  const handleSave = async () => {
+    try {
+      for (const tier of tiers) {
+        if (tier.id < 0) {
+          // New tier - create it
+          await fetch('/api/pricing', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: tier.name,
+              monthly: tier.monthly,
+              annual: tier.annual,
+              sortOrder: tier.sortOrder,
+            }),
+          });
+        } else {
+          // Existing tier - update it
+          await fetch(`/api/pricing/${tier.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: tier.name,
+              monthly: tier.monthly,
+              annual: tier.annual,
+              sortOrder: tier.sortOrder,
+            }),
+          });
+        }
+      }
+      await fetchTiers();
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (error) {
+      console.error('Error saving pricing tiers:', error);
+    }
+  };
+
+  if (loading) {
+    return <div className={styles.editorContent}><p>Loading...</p></div>;
+  }
 
   return (
     <div className={styles.editorContent}>
-      <h4 className={styles.editorSubtitle}>Monthly Pricing Tiers</h4>
+      <h4 className={styles.editorSubtitle}>Pricing Tiers</h4>
       <div className={styles.formGrid}>
-        <div className={styles.formGroup}>
-          <label className={styles.formLabel}>Basic ($/month)</label>
-          <input
-            type="number"
-            className={styles.formInput}
-            value={basicPrice}
-            onChange={(e) => setBasicPrice(e.target.value)}
-          />
-        </div>
-        <div className={styles.formGroup}>
-          <label className={styles.formLabel}>Verified ($/month)</label>
-          <input
-            type="number"
-            className={styles.formInput}
-            value={verifiedPrice}
-            onChange={(e) => setVerifiedPrice(e.target.value)}
-          />
-        </div>
-        <div className={styles.formGroup}>
-          <label className={styles.formLabel}>Featured ($/month)</label>
-          <input
-            type="number"
-            className={styles.formInput}
-            value={featuredPrice}
-            onChange={(e) => setFeaturedPrice(e.target.value)}
-          />
-        </div>
-        <div className={styles.formGroup}>
-          <label className={styles.formLabel}>Premium ($/month)</label>
-          <input
-            type="number"
-            className={styles.formInput}
-            value={premiumPrice}
-            onChange={(e) => setPremiumPrice(e.target.value)}
-          />
-        </div>
+        {tiers.map((tier) => (
+          <div key={tier.id} className={styles.formGroup}>
+            <label className={styles.formLabel}>{tier.name} ($/month)</label>
+            <input
+              type="number"
+              className={styles.formInput}
+              value={tier.monthly}
+              onChange={(e) => handleTierChange(tier.id, 'monthly', parseFloat(e.target.value) || 0)}
+            />
+            <label className={styles.formLabel}>{tier.name} ($/year)</label>
+            <input
+              type="number"
+              className={styles.formInput}
+              value={tier.annual}
+              onChange={(e) => handleTierChange(tier.id, 'annual', parseFloat(e.target.value) || 0)}
+            />
+          </div>
+        ))}
       </div>
       <div className={styles.editorActions}>
         <button type="button" className={styles.cancelBtn} onClick={onClose}>Cancel</button>
@@ -1361,14 +1289,104 @@ function PricingEditor({ onClose }: { onClose: () => void }) {
 }
 
 function HomepageEditor({ onClose }: { onClose: () => void }) {
-  const [heroTitle, setHeroTitle] = useState('Find Hydro-Vac Services Near You');
-  const [heroSubtitle, setHeroSubtitle] = useState('Connect with trusted hydro excavation companies across the nation');
+  const [loading, setLoading] = useState(true);
+  const [heroTitle, setHeroTitle] = useState('');
+  const [heroSubtitle, setHeroSubtitle] = useState('');
+  const [mainImage, setMainImage] = useState('');
+  const [slideshowEnabled, setSlideshowEnabled] = useState(false);
+  const [slideshowImages, setSlideshowImages] = useState<DBSlideshowImage[]>([]);
+  const [newImageUrl, setNewImageUrl] = useState('');
   const [saved, setSaved] = useState(false);
 
-  const handleSave = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  useEffect(() => {
+    fetchHomepageContent();
+    fetchSlideshowImages();
+  }, []);
+
+  const fetchHomepageContent = async () => {
+    try {
+      const response = await fetch('/api/homepage');
+      if (response.ok) {
+        const data = await response.json();
+        setHeroTitle(data.heroTitle || '');
+        setHeroSubtitle(data.heroSubtitle || '');
+        setMainImage(data.mainImage || '');
+        setSlideshowEnabled(data.slideshowEnabled || false);
+      }
+    } catch (error) {
+      console.error('Error fetching homepage content:', error);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const fetchSlideshowImages = async () => {
+    try {
+      const response = await fetch('/api/homepage/slideshow');
+      if (response.ok) {
+        const data = await response.json();
+        setSlideshowImages(data);
+      }
+    } catch (error) {
+      console.error('Error fetching slideshow images:', error);
+    }
+  };
+
+  const handleAddImage = async () => {
+    if (!newImageUrl.trim()) return;
+    try {
+      const response = await fetch('/api/homepage/slideshow', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageUrl: newImageUrl.trim() }),
+      });
+      if (response.ok) {
+        const newImage = await response.json();
+        setSlideshowImages([...slideshowImages, newImage]);
+        setNewImageUrl('');
+      }
+    } catch (error) {
+      console.error('Error adding slideshow image:', error);
+    }
+  };
+
+  const handleRemoveImage = async (id: number) => {
+    try {
+      const response = await fetch(`/api/homepage/slideshow/${id}`, {
+        method: 'DELETE',
+      });
+      if (response.ok) {
+        setSlideshowImages(slideshowImages.filter(img => img.id !== id));
+      }
+    } catch (error) {
+      console.error('Error removing slideshow image:', error);
+    }
+  };
+
+  const handleSave = async () => {
+    try {
+      const response = await fetch('/api/homepage', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          heroTitle,
+          heroSubtitle,
+          mainImage,
+          slideshowEnabled,
+        }),
+      });
+      if (response.ok) {
+        setSaved(true);
+        setTimeout(() => setSaved(false), 2000);
+      }
+    } catch (error) {
+      console.error('Error saving homepage content:', error);
+    }
+  };
+
+  if (loading) {
+    return <div className={styles.editorContent}><p>Loading...</p></div>;
+  }
 
   return (
     <div className={styles.editorContent}>
@@ -1391,11 +1409,369 @@ function HomepageEditor({ onClose }: { onClose: () => void }) {
           rows={3}
         />
       </div>
+
+      <h4 className={styles.editorSubtitle}>Hero Image</h4>
+      <div className={styles.formGroup}>
+        <label className={styles.formLabel}>
+          <input
+            type="checkbox"
+            checked={slideshowEnabled}
+            onChange={(e) => setSlideshowEnabled(e.target.checked)}
+          />{' '}
+          Enable Slideshow (instead of single image)
+        </label>
+      </div>
+
+      {!slideshowEnabled ? (
+        <div className={styles.formGroup}>
+          <label className={styles.formLabel}>Main Hero Image URL</label>
+          <input
+            type="url"
+            className={styles.formInput}
+            value={mainImage}
+            onChange={(e) => setMainImage(e.target.value)}
+            placeholder="Enter hero image URL"
+          />
+        </div>
+      ) : (
+        <>
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel}>Slideshow Images</label>
+            <div className={styles.imageInputRow}>
+              <input
+                type="url"
+                className={styles.formInput}
+                value={newImageUrl}
+                onChange={(e) => setNewImageUrl(e.target.value)}
+                placeholder="Enter image URL"
+              />
+              <button type="button" className={styles.addImageBtn} onClick={handleAddImage}>Add</button>
+            </div>
+            <div className={styles.imageList}>
+              {slideshowImages.length === 0 ? (
+                <p className={styles.noImages}>No slideshow images added yet.</p>
+              ) : (
+                slideshowImages.map((img) => (
+                  <div key={img.id} className={styles.imageItem}>
+                    <span className={styles.imageUrl}>{img.imageUrl}</span>
+                    <button
+                      type="button"
+                      className={styles.removeImageBtn}
+                      onClick={() => handleRemoveImage(img.id)}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </>
+      )}
+
       <div className={styles.editorActions}>
         <button type="button" className={styles.cancelBtn} onClick={onClose}>Cancel</button>
         <button type="button" className={styles.saveBtn} onClick={handleSave}>
           {saved ? 'Saved!' : 'Save Changes'}
         </button>
+      </div>
+    </div>
+  );
+}
+
+// New Modal Components for Database Types
+
+function CompanyModalDB({
+  company,
+  isNew,
+  onSave,
+  onClose,
+}: {
+  company: DBCompany;
+  isNew: boolean;
+  onSave: (company: DBCompany) => void;
+  onClose: () => void;
+}) {
+  const [formData, setFormData] = useState<DBCompany>(company);
+  const [specialtiesInput, setSpecialtiesInput] = useState(company.specialties || '');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave({
+      ...formData,
+      specialties: specialtiesInput,
+    });
+  };
+
+  return (
+    <div className={styles.modalOverlay} onClick={onClose}>
+      <div className={styles.modalLarge} onClick={(e) => e.stopPropagation()}>
+        <div className={styles.modalHeader}>
+          <h3 className={styles.modalTitle}>{isNew ? 'Add Company' : 'Edit Company'}</h3>
+          <button className={styles.closeBtn} onClick={onClose}>×</button>
+        </div>
+        <form onSubmit={handleSubmit}>
+          <div className={styles.modalBody}>
+            <div className={styles.formGrid}>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>Company Name</label>
+                <input
+                  type="text"
+                  className={styles.formInput}
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  required
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>City</label>
+                <input
+                  type="text"
+                  className={styles.formInput}
+                  value={formData.city}
+                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                  required
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>State</label>
+                <select
+                  className={styles.formSelect}
+                  value={formData.state}
+                  onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                  required
+                >
+                  <option value="">Select State</option>
+                  {US_STATES.map(state => (
+                    <option key={state} value={state}>{state}</option>
+                  ))}
+                </select>
+              </div>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>Phone</label>
+                <input
+                  type="tel"
+                  className={styles.formInput}
+                  value={formData.phone || ''}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>Website</label>
+                <input
+                  type="url"
+                  className={styles.formInput}
+                  value={formData.website || ''}
+                  onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>Tier</label>
+                <select
+                  className={styles.formSelect}
+                  value={formData.tier}
+                  onChange={(e) => setFormData({ ...formData, tier: e.target.value })}
+                >
+                  <option value="Basic">Basic</option>
+                  <option value="Verified">Verified</option>
+                  <option value="Featured">Featured</option>
+                  <option value="Premium">Premium</option>
+                </select>
+              </div>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>Coverage Radius (miles)</label>
+                <input
+                  type="number"
+                  className={styles.formInput}
+                  value={formData.coverageRadius || ''}
+                  onChange={(e) => setFormData({ ...formData, coverageRadius: parseInt(e.target.value) || null })}
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>Latitude</label>
+                <input
+                  type="number"
+                  step="any"
+                  className={styles.formInput}
+                  value={formData.latitude || ''}
+                  onChange={(e) => setFormData({ ...formData, latitude: parseFloat(e.target.value) || null })}
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>Longitude</label>
+                <input
+                  type="number"
+                  step="any"
+                  className={styles.formInput}
+                  value={formData.longitude || ''}
+                  onChange={(e) => setFormData({ ...formData, longitude: parseFloat(e.target.value) || null })}
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>
+                  <input
+                    type="checkbox"
+                    checked={formData.unionAffiliated}
+                    onChange={(e) => setFormData({ ...formData, unionAffiliated: e.target.checked })}
+                  />{' '}
+                  Union Affiliated
+                </label>
+              </div>
+              <div className={styles.formGroupFull}>
+                <label className={styles.formLabel}>Service Specialties (comma-separated)</label>
+                <input
+                  type="text"
+                  className={styles.formInput}
+                  value={specialtiesInput}
+                  onChange={(e) => setSpecialtiesInput(e.target.value)}
+                  placeholder="Hydro Excavation, Daylighting, Potholing"
+                />
+              </div>
+            </div>
+          </div>
+          <div className={styles.modalFooter}>
+            <button type="button" className={styles.cancelBtn} onClick={onClose}>Cancel</button>
+            <button type="submit" className={styles.saveBtn}>
+              {isNew ? 'Add Company' : 'Save Changes'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function FacilityModalDB({
+  facility,
+  isNew,
+  onSave,
+  onClose,
+}: {
+  facility: DBDisposalFacility;
+  isNew: boolean;
+  onSave: (facility: DBDisposalFacility) => void;
+  onClose: () => void;
+}) {
+  const [formData, setFormData] = useState<DBDisposalFacility>(facility);
+  const [materialsInput, setMaterialsInput] = useState(facility.materialsAccepted || '');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave({
+      ...formData,
+      materialsAccepted: materialsInput,
+    });
+  };
+
+  return (
+    <div className={styles.modalOverlay} onClick={onClose}>
+      <div className={styles.modalLarge} onClick={(e) => e.stopPropagation()}>
+        <div className={styles.modalHeader}>
+          <h3 className={styles.modalTitle}>{isNew ? 'Add Facility' : 'Edit Facility'}</h3>
+          <button className={styles.closeBtn} onClick={onClose}>×</button>
+        </div>
+        <form onSubmit={handleSubmit}>
+          <div className={styles.modalBody}>
+            <div className={styles.formGrid}>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>Facility Name</label>
+                <input
+                  type="text"
+                  className={styles.formInput}
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  required
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>Address</label>
+                <input
+                  type="text"
+                  className={styles.formInput}
+                  value={formData.address || ''}
+                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>City</label>
+                <input
+                  type="text"
+                  className={styles.formInput}
+                  value={formData.city || ''}
+                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>State</label>
+                <select
+                  className={styles.formSelect}
+                  value={formData.state || ''}
+                  onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                >
+                  <option value="">Select State</option>
+                  {US_STATES.map(state => (
+                    <option key={state} value={state}>{state}</option>
+                  ))}
+                </select>
+              </div>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>Phone</label>
+                <input
+                  type="tel"
+                  className={styles.formInput}
+                  value={formData.phone || ''}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>Hours</label>
+                <input
+                  type="text"
+                  className={styles.formInput}
+                  value={formData.hours || ''}
+                  onChange={(e) => setFormData({ ...formData, hours: e.target.value })}
+                  placeholder="Mon-Fri: 6AM-5PM"
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>Latitude</label>
+                <input
+                  type="number"
+                  step="any"
+                  className={styles.formInput}
+                  value={formData.latitude || ''}
+                  onChange={(e) => setFormData({ ...formData, latitude: parseFloat(e.target.value) || null })}
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>Longitude</label>
+                <input
+                  type="number"
+                  step="any"
+                  className={styles.formInput}
+                  value={formData.longitude || ''}
+                  onChange={(e) => setFormData({ ...formData, longitude: parseFloat(e.target.value) || null })}
+                />
+              </div>
+              <div className={styles.formGroupFull}>
+                <label className={styles.formLabel}>Materials Accepted (comma-separated)</label>
+                <input
+                  type="text"
+                  className={styles.formInput}
+                  value={materialsInput}
+                  onChange={(e) => setMaterialsInput(e.target.value)}
+                  placeholder="Drilling Mud, Industrial Waste, Contaminated Soil"
+                />
+              </div>
+            </div>
+          </div>
+          <div className={styles.modalFooter}>
+            <button type="button" className={styles.cancelBtn} onClick={onClose}>Cancel</button>
+            <button type="submit" className={styles.saveBtn}>
+              {isNew ? 'Add Facility' : 'Save Changes'}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );
