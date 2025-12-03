@@ -24,11 +24,15 @@ model Company {
   longitude       Float?
   unionAffiliated Boolean  @default(false)
   specialties     String?  // comma separated
+  email           String?
+  address         String?
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
   images          CompanyImage[]
+
+  @@map("companies")
 }
 
 model CompanyImage {
@@ -39,6 +43,8 @@ model CompanyImage {
   createdAt DateTime @default(now())
 
   Company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@map("company_images")
 }
 
 model DisposalFacility {
@@ -55,6 +61,8 @@ model DisposalFacility {
 
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
+
+  @@map("disposal_facilities")
 }
 
 model DisposalSlideshow {
@@ -63,6 +71,8 @@ model DisposalSlideshow {
   imageUrl  String
 
   createdAt DateTime @default(now())
+
+  @@map("disposal_slideshows")
 }
 
 model StateLandingPage {
@@ -76,6 +86,8 @@ model StateLandingPage {
   updatedAt   DateTime              @updatedAt
 
   images      StateLandingImage[]
+
+  @@map("state_landing_pages")
 }
 
 model StateLandingImage {
@@ -86,6 +98,8 @@ model StateLandingImage {
   createdAt DateTime          @default(now())
 
   Page      StateLandingPage  @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  @@map("state_landing_images")
 }
 
 model PricingTier {
@@ -97,6 +111,8 @@ model PricingTier {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@map("pricing_tiers")
 }
 
 model HomepageContent {
@@ -108,6 +124,8 @@ model HomepageContent {
 
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
+
+  @@map("homepage_content")
 }
 
 model HomepageSlideshowImage {
@@ -115,4 +133,6 @@ model HomepageSlideshowImage {
   imageUrl  String
 
   createdAt DateTime @default(now())
+
+  @@map("homepage_slideshow_images")
 }

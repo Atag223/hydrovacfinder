@@ -1,0 +1,135 @@
+.main {
+  padding-top: 64px;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+.container {
+  max-width: 500px;
+  width: 100%;
+}
+
+.card {
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  padding: 3rem 2rem;
+  text-align: center;
+}
+
+.iconWrapper {
+  width: 100px;
+  height: 100px;
+  margin: 0 auto 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #dcfce7 0%, #86efac 100%);
+  border-radius: 50%;
+}
+
+.iconWrapper svg {
+  color: #16a34a;
+}
+
+.title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  font-size: 1rem;
+  color: var(--gray-600);
+  margin-bottom: 2rem;
+}
+
+.details {
+  text-align: left;
+  background: var(--gray-50);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.details h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--gray-700);
+  margin-bottom: 1rem;
+}
+
+.details p {
+  font-size: 0.9375rem;
+  color: var(--gray-600);
+  margin-bottom: 0.5rem;
+}
+
+.details strong {
+  color: var(--gray-700);
+}
+
+.nextSteps {
+  text-align: left;
+  background: linear-gradient(135deg, #dbeafe 0%, #93c5fd 100%);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.nextSteps h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e40af;
+  margin-bottom: 1rem;
+}
+
+.nextSteps ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.nextSteps li {
+  font-size: 0.9375rem;
+  color: #1e40af;
+  padding: 0.5rem 0;
+  padding-left: 1.5rem;
+  position: relative;
+}
+
+.nextSteps li::before {
+  content: '→';
+  position: absolute;
+  left: 0;
+  font-weight: 700;
+}
+
+.backLink {
+  display: inline-block;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--primary);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.backLink:hover {
+  color: var(--primary-dark);
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .card {
+    padding: 2rem 1.5rem;
+  }
+  
+  .title {
+    font-size: 1.5rem;
+  }
+}
