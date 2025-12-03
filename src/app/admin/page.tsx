@@ -123,6 +123,12 @@ export default function AdminPage() {
     }
   };
 
+  const handleLogout = () => {
+    sessionStorage.removeItem('adminAuthenticated');
+    setHasLoggedIn(false);
+    setPassword('');
+  };
+
   // Show login form if not authenticated
   if (!isAuthenticated) {
     return (
@@ -131,26 +137,28 @@ export default function AdminPage() {
         <main className={styles.main}>
           <div className={styles.container}>
             <div className={styles.loginContainer}>
-              <h1 className={styles.loginTitle}>Admin Login</h1>
-              <p className={styles.loginSubtitle}>Please enter the admin password to continue</p>
-              <form onSubmit={handleLogin} className={styles.loginForm}>
-                <div className={styles.formGroup}>
-                  <label className={styles.formLabel}>Password</label>
-                  <input
-                    type="password"
-                    className={styles.formInput}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter admin password"
-                    autoFocus
-                    required
-                  />
-                </div>
-                {error && <p className={styles.loginError}>{error}</p>}
-                <button type="submit" className={styles.loginBtn}>
-                  Login
-                </button>
-              </form>
+              <div className={styles.loginBox}>
+                <h1 className={styles.loginTitle}>Admin Login</h1>
+                <p className={styles.loginSubtitle}>Please enter the admin password to continue</p>
+                <form onSubmit={handleLogin} className={styles.loginForm}>
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>Password</label>
+                    <input
+                      type="password"
+                      className={styles.formInput}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Enter admin password"
+                      autoFocus
+                      required
+                    />
+                  </div>
+                  {error && <p className={styles.loginError}>{error}</p>}
+                  <button type="submit" className={styles.loginBtn}>
+                    Login
+                  </button>
+                </form>
+              </div>
             </div>
           </div>
         </main>
@@ -169,6 +177,9 @@ export default function AdminPage() {
                 <h1 className={styles.title}>Admin Dashboard</h1>
                 <p className={styles.subtitle}>Manage companies, facilities, and view analytics</p>
               </div>
+              <button className={styles.logoutBtn} onClick={handleLogout}>
+                Logout
+              </button>
             </div>
           </header>
 
