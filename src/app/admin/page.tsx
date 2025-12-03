@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useSyncExternalStore, useCallback } from 'react';
 import Navigation from '@/components/Navigation';
 import styles from './page.module.css';
 import { hydroVacCompanies, disposalFacilities } from '@/data/companyData';
@@ -8,6 +8,27 @@ import { DateFilter, HydroVacTier, HydroVacCompany, DisposalFacility, US_STATES 
 
 type AdminTab = 'companies' | 'facilities' | 'analytics' | 'content';
 type ContentSection = 'state-pages' | 'slideshows' | 'pricing' | 'homepage' | null;
+
+const ADMIN_PASSWORD = 'Ajt223';
+
+// Custom hook to sync with sessionStorage using useSyncExternalStore
+function useSessionStorageAuth() {
+  const subscribe = useCallback((callback: () => void) => {
+    // Listen for storage events from other tabs
+    window.addEventListener('storage', callback);
+    return () => window.removeEventListener('storage', callback);
+  }, []);
+  
+  const getSnapshot = useCallback(() => {
+    return sessionStorage.getItem('adminAuthenticated') === 'true';
+  }, []);
+  
+  const getServerSnapshot = useCallback(() => {
+    return false; // Default to not authenticated on server
+  }, []);
+  
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+}
 
 const mockAnalytics = {
   today: {
@@ -83,6 +104,59 @@ const mockAnalytics = {
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<AdminTab>('companies');
   const [dateFilter, setDateFilter] = useState<DateFilter>('7days');
+  const isAuthenticatedFromStorage = useSessionStorageAuth();
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
+  // Track manual login to avoid flickering
+  const [hasLoggedIn, setHasLoggedIn] = useState(false);
+  const isAuthenticated = isAuthenticatedFromStorage || hasLoggedIn;
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password === ADMIN_PASSWORD) {
+      sessionStorage.setItem('adminAuthenticated', 'true');
+      setHasLoggedIn(true);
+      setError('');
+    } else {
+      setError('Incorrect password. Please try again.');
+    }
+  };
+
+  // Show login form if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <>
+        <Navigation />
+        <main className={styles.main}>
+          <div className={styles.container}>
+            <div className={styles.loginContainer}>
+              <h1 className={styles.loginTitle}>Admin Login</h1>
+              <p className={styles.loginSubtitle}>Please enter the admin password to continue</p>
+              <form onSubmit={handleLogin} className={styles.loginForm}>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Password</label>
+                  <input
+                    type="password"
+                    className={styles.formInput}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter admin password"
+                    autoFocus
+                    required
+                  />
+                </div>
+                {error && <p className={styles.loginError}>{error}</p>}
+                <button type="submit" className={styles.loginBtn}>
+                  Login
+                </button>
+              </form>
+            </div>
+          </div>
+        </main>
+      </>
+    );
+  }
 
   return (
     <>
