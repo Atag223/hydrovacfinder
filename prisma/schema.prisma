@@ -24,17 +24,21 @@ model Company {
   longitude       Float?
   unionAffiliated Boolean  @default(false)
   specialties     String?  // comma separated
+
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  images CompanyImage[]
+  images          CompanyImage[]
 }
 
 model CompanyImage {
-  id        Int     @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   companyId Int
   imageUrl  String
-  Company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  Company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
 }
 
 model DisposalFacility {
@@ -48,52 +52,67 @@ model DisposalFacility {
   latitude          Float?
   longitude         Float?
   materialsAccepted String?  // comma separated
+
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 }
 
 model DisposalSlideshow {
-  id       Int    @id @default(autoincrement())
-  state    String
-  imageUrl String
+  id        Int      @id @default(autoincrement())
+  state     String
+  imageUrl  String
+
+  createdAt DateTime @default(now())
 }
 
 model StateLandingPage {
-  id          Int      @id @default(autoincrement())
-  state       String   @unique
+  id          Int                   @id @default(autoincrement())
+  state       String                @unique
   header      String?
   description String?
   logoUrl     String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
 
-  images StateLandingImage[]
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+
+  images      StateLandingImage[]
 }
 
 model StateLandingImage {
-  id       Int              @id @default(autoincrement())
-  pageId   Int
-  imageUrl String
-  Page     StateLandingPage @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  id        Int               @id @default(autoincrement())
+  pageId    Int
+  imageUrl  String
+
+  createdAt DateTime          @default(now())
+
+  Page      StateLandingPage  @relation(fields: [pageId], references: [id], onDelete: Cascade)
 }
 
 model PricingTier {
-  id        Int    @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   name      String
   monthly   Float
   annual    Float
   sortOrder Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model HomepageContent {
-  id               Int     @id @default(autoincrement())
+  id               Int      @id @default(autoincrement())
   heroTitle        String?
   heroSubtitle     String?
-  mainImage        String? // Big hero image
-  slideshowEnabled Boolean @default(false)
+  mainImage        String?   // Big hero image
+  slideshowEnabled Boolean   @default(false)
+
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 }
 
 model HomepageSlideshowImage {
-  id       Int    @id @default(autoincrement())
-  imageUrl String
+  id        Int      @id @default(autoincrement())
+  imageUrl  String
+
+  createdAt DateTime @default(now())
 }
