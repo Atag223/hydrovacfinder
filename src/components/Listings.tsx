@@ -1,12 +1,22 @@
 'use client';
 
-import { HydroVacCompany, DisposalFacility, FilterType, HydroVacTier } from '@/types';
+import { HydroVacCompany, DisposalFacility, FilterType, HydroVacTier, SearchLocation } from '@/types';
 import styles from './Listings.module.css';
 
+// Extended types that may include distance
+interface CompanyWithDistance extends HydroVacCompany {
+  distance?: number;
+}
+
+interface FacilityWithDistance extends DisposalFacility {
+  distance?: number;
+}
+
 interface ListingsProps {
-  companies: HydroVacCompany[];
-  facilities: DisposalFacility[];
+  companies: CompanyWithDistance[];
+  facilities: FacilityWithDistance[];
   activeFilter: FilterType;
+  searchLocation?: SearchLocation | null;
 }
 
 const tierOrder: Record<HydroVacTier, number> = {
@@ -29,8 +39,12 @@ function getTierBadgeClass(tier: HydroVacTier): string {
   }
 }
 
-export default function Listings({ companies, facilities, activeFilter }: ListingsProps) {
-  const sortedCompanies = [...companies].sort((a, b) => tierOrder[a.tier] - tierOrder[b.tier]);
+export default function Listings({ companies, facilities, activeFilter, searchLocation }: ListingsProps) {
+  // When search location is active, companies are already sorted by distance
+  // Otherwise, sort by tier
+  const sortedCompanies = searchLocation
+    ? companies
+    : [...companies].sort((a, b) => tierOrder[a.tier] - tierOrder[b.tier]);
 
   const showCompanies = activeFilter === 'all' || activeFilter === 'hydrovac';
   const showFacilities = activeFilter === 'all' || activeFilter === 'disposal';
@@ -44,9 +58,12 @@ export default function Listings({ companies, facilities, activeFilter }: Listin
               Hydro-Vac Companies
               <span className={styles.count}>({sortedCompanies.length})</span>
             </h2>
+            {searchLocation && sortedCompanies.length === 0 && (
+              <p className={styles.noResults}>No companies found within the selected radius. Try increasing the search radius.</p>
+            )}
             <div className={styles.grid}>
               {sortedCompanies.map((company) => (
-                <CompanyCard key={company.id} company={company} />
+                <CompanyCard key={company.id} company={company} showDistance={!!searchLocation} />
               ))}
             </div>
           </div>
@@ -58,9 +75,12 @@ export default function Listings({ companies, facilities, activeFilter }: Listin
               Disposal Facilities
               <span className={styles.count}>({facilities.length})</span>
             </h2>
+            {searchLocation && facilities.length === 0 && (
+              <p className={styles.noResults}>No facilities found within the selected radius. Try increasing the search radius.</p>
+            )}
             <div className={styles.grid}>
               {facilities.map((facility) => (
-                <FacilityCard key={facility.id} facility={facility} />
+                <FacilityCard key={facility.id} facility={facility} showDistance={!!searchLocation} />
               ))}
             </div>
           </div>
@@ -70,7 +90,7 @@ export default function Listings({ companies, facilities, activeFilter }: Listin
   );
 }
 
-function CompanyCard({ company }: { company: HydroVacCompany }) {
+function CompanyCard({ company, showDistance }: { company: CompanyWithDistance; showDistance: boolean }) {
   return (
     <article className={styles.card}>
       <div className={styles.cardHeader}>
@@ -86,6 +106,9 @@ function CompanyCard({ company }: { company: HydroVacCompany }) {
             <circle cx="12" cy="10" r="3" />
           </svg>
           {company.city}, {company.state}
+          {showDistance && company.distance !== undefined && (
+            <span className={styles.distance}> • {Math.round(company.distance)} miles away</span>
+          )}
         </p>
       </div>
 
@@ -133,7 +156,7 @@ function CompanyCard({ company }: { company: HydroVacCompany }) {
   );
 }
 
-function FacilityCard({ facility }: { facility: DisposalFacility }) {
+function FacilityCard({ facility, showDistance }: { facility: FacilityWithDistance; showDistance: boolean }) {
   return (
     <article className={styles.card}>
       <div className={styles.cardHeader}>
@@ -149,6 +172,9 @@ function FacilityCard({ facility }: { facility: DisposalFacility }) {
             <circle cx="12" cy="10" r="3" />
           </svg>
           {facility.address}, {facility.city}, {facility.state}
+          {showDistance && facility.distance !== undefined && (
+            <span className={styles.distance}> • {Math.round(facility.distance)} miles away</span>
+          )}
         </p>
       </div>
 

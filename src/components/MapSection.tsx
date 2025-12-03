@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { SearchRadius, FilterType, HydroVacCompany, DisposalFacility } from '@/types';
+import { SearchRadius, FilterType, HydroVacCompany, DisposalFacility, SearchLocation } from '@/types';
 import InteractiveMap from './InteractiveMap';
 import styles from './MapSection.module.css';
 
@@ -10,12 +10,14 @@ interface MapSectionProps {
   onFilterChange: (filter: FilterType) => void;
   companies: HydroVacCompany[];
   facilities: DisposalFacility[];
+  onSearchLocationChange?: (location: SearchLocation | null, radius: SearchRadius) => void;
 }
 
-export default function MapSection({ activeFilter, onFilterChange, companies, facilities }: MapSectionProps) {
+export default function MapSection({ activeFilter, onFilterChange, companies, facilities, onSearchLocationChange }: MapSectionProps) {
   const [searchInput, setSearchInput] = useState('');
   const [activeSearchQuery, setActiveSearchQuery] = useState('');
   const [searchRadius, setSearchRadius] = useState<SearchRadius>(50);
+  const [searchLocation, setSearchLocation] = useState<SearchLocation | null>(null);
   const [isLocating, setIsLocating] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [locationError, setLocationError] = useState('');
@@ -52,9 +54,19 @@ export default function MapSection({ activeFilter, onFilterChange, companies, fa
     }
   };
 
-  const handleSearchComplete = useCallback(() => {
+  const handleSearchComplete = useCallback((location: SearchLocation | null) => {
     setIsSearching(false);
-  }, []);
+    setSearchLocation(location);
+    onSearchLocationChange?.(location, searchRadius);
+  }, [onSearchLocationChange, searchRadius]);
+
+  // Update location filtering when radius changes (if we have a location)
+  const handleRadiusChange = useCallback((newRadius: SearchRadius) => {
+    setSearchRadius(newRadius);
+    if (searchLocation) {
+      onSearchLocationChange?.(searchLocation, newRadius);
+    }
+  }, [searchLocation, onSearchLocationChange]);
 
   return (
     <section id="map-section" className={styles.mapSection}>
@@ -91,7 +103,7 @@ export default function MapSection({ activeFilter, onFilterChange, companies, fa
 
             <select
               value={searchRadius}
-              onChange={(e) => setSearchRadius(Number(e.target.value) as SearchRadius)}
+              onChange={(e) => handleRadiusChange(Number(e.target.value) as SearchRadius)}
               className={styles.radiusSelect}
             >
               <option value={25}>25 miles</option>
