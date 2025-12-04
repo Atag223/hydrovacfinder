@@ -1,0 +1,112 @@
+[
+  {
+    "name": "Clean Harbors Deer Park",
+    "address": "2027 Independence Pkwy S",
+    "city": "Deer Park",
+    "state": "Texas",
+    "materialsAccepted": "Drilling Mud, Industrial Waste, Contaminated Soil, Hydrovac Slurry",
+    "hours": "Mon-Fri: 6AM-6PM, Sat: 7AM-3PM",
+    "phone": "(281) 930-2300",
+    "latitude": 29.7052,
+    "longitude": -95.1158
+  },
+  {
+    "name": "Republic Services Landfill",
+    "address": "10310 Hirsch Road",
+    "city": "Houston",
+    "state": "Texas",
+    "materialsAccepted": "Non-Hazardous Waste, Construction Debris, Hydrovac Spoils",
+    "hours": "Mon-Fri: 6AM-5PM, Sat: 6AM-12PM",
+    "phone": "(713) 635-0005",
+    "latitude": 29.85,
+    "longitude": -95.36
+  },
+  {
+    "name": "Waste Management Kettleman Hills",
+    "address": "35251 Skyline Road",
+    "city": "Kettleman City",
+    "state": "California",
+    "materialsAccepted": "Hazardous Waste, Industrial Sludge, Contaminated Materials",
+    "hours": "Mon-Sat: 7AM-5PM",
+    "phone": "(559) 386-9711",
+    "latitude": 35.99,
+    "longitude": -119.96
+  },
+  {
+    "name": "US Ecology Idaho",
+    "address": "20400 Lemley Road",
+    "city": "Grand View",
+    "state": "Idaho",
+    "materialsAccepted": "Hazardous Waste, Industrial Waste, Drilling Fluids",
+    "hours": "Mon-Fri: 7AM-4PM",
+    "phone": "(208) 834-2275",
+    "latitude": 42.98,
+    "longitude": -116.11
+  },
+  {
+    "name": "Stericycle Environmental Solutions",
+    "address": "4010 Commercial Avenue",
+    "city": "Northbrook",
+    "state": "Illinois",
+    "materialsAccepted": "Medical Waste, Industrial Waste, Contaminated Soil",
+    "hours": "Mon-Fri: 6AM-6PM",
+    "phone": "(847) 498-1600",
+    "latitude": 42.1275,
+    "longitude": -87.829
+  },
+  {
+    "name": "Pacific Northwest Disposal",
+    "address": "1500 Industrial Way",
+    "city": "Portland",
+    "state": "Oregon",
+    "materialsAccepted": "Non-Hazardous Waste, Hydrovac Slurry, Construction Debris",
+    "hours": "Mon-Fri: 6AM-5PM",
+    "phone": "(503) 555-0123",
+    "latitude": 45.5152,
+    "longitude": -122.6784
+  },
+  {
+    "name": "Rocky Mountain Disposal Center",
+    "address": "8900 Industrial Blvd",
+    "city": "Denver",
+    "state": "Colorado",
+    "materialsAccepted": "Industrial Waste, Drilling Fluids, Contaminated Soil",
+    "hours": "Mon-Sat: 6AM-6PM",
+    "phone": "(303) 555-0456",
+    "latitude": 39.7,
+    "longitude": -105.02
+  },
+  {
+    "name": "Great Lakes Environmental",
+    "address": "2200 Lake Shore Drive",
+    "city": "Cleveland",
+    "state": "Ohio",
+    "materialsAccepted": "Hazardous Waste, Industrial Sludge, Hydrovac Spoils",
+    "hours": "Mon-Fri: 7AM-5PM",
+    "phone": "(216) 555-0789",
+    "latitude": 41.4993,
+    "longitude": -81.6944
+  },
+  {
+    "name": "Southeast Disposal Services",
+    "address": "5500 Industrial Park Rd",
+    "city": "Charlotte",
+    "state": "North Carolina",
+    "materialsAccepted": "Non-Hazardous Waste, Construction Debris, Drilling Mud",
+    "hours": "Mon-Fri: 6AM-6PM, Sat: 7AM-2PM",
+    "phone": "(704) 555-0321",
+    "latitude": 35.2271,
+    "longitude": -80.8431
+  },
+  {
+    "name": "Midwest Environmental Center",
+    "address": "7800 County Road 15",
+    "city": "Kansas City",
+    "state": "Missouri",
+    "materialsAccepted": "Industrial Waste, Contaminated Soil, Hydrovac Slurry",
+    "hours": "Mon-Fri: 6AM-5PM",
+    "phone": "(816) 555-0654",
+    "latitude": 39.0997,
+    "longitude": -94.5786
+  }
+]
