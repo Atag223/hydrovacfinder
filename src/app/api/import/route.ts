@@ -1,16 +1,17 @@
 /**
- * Data Import Script
+ * Data Import API Route
  * 
- * This script imports hydrovac companies (with valid websites only) and disposal facilities
+ * This API route imports hydrovac companies (with valid websites only) and disposal facilities
  * from the static data files into the Supabase database via Prisma.
  * 
- * Usage: npx ts-node --compiler-options '{"module":"commonjs"}' scripts/import-data.ts
+ * Usage: POST /api/import
+ * 
+ * Security: This endpoint should be protected in production
  */
 
-import { PrismaClient } from '@prisma/client';
-import companiesData from '../src/data/companies_export.json';
-
-const prisma = new PrismaClient();
+import { NextResponse } from 'next/server';
+import prisma from '@/lib/prisma';
+import companiesData from '@/data/companies_export.json';
 
 // Raw company data type from the JSON file
 interface RawCompany {
@@ -60,7 +61,6 @@ const STATE_ABBR_TO_NAME: Record<string, string> = {
   'SD': 'South Dakota', 'TN': 'Tennessee', 'TX': 'Texas', 'UT': 'Utah',
   'VT': 'Vermont', 'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia',
   'WI': 'Wisconsin', 'WY': 'Wyoming', 'DC': 'District of Columbia',
-  // Canadian provinces
   'BC': 'British Columbia', 'AB': 'Alberta', 'SK': 'Saskatchewan', 'MB': 'Manitoba',
   'ON': 'Ontario', 'QC': 'Quebec', 'NB': 'New Brunswick', 'NS': 'Nova Scotia',
   'PE': 'Prince Edward Island', 'NL': 'Newfoundland and Labrador'
@@ -104,20 +104,20 @@ function isValidUrl(urlString: string | null): boolean {
 }
 
 /**
- * Map tier from JSON to database tier format
+ * Map tier from JSON to database tier format (lowercase to match frontend expectations)
  */
 function mapTier(tier: string): string {
   switch (tier.toLowerCase()) {
     case 'premium':
-      return 'Premium';
+      return 'premium';
     case 'featured':
-      return 'Featured';
+      return 'featured';
     case 'verified':
-      return 'Verified';
+      return 'verified';
     case 'free':
     case 'basic':
     default:
-      return 'Basic';
+      return 'basic';
   }
 }
 
@@ -235,9 +235,7 @@ const disposalFacilities: DisposalFacilityData[] = [
   },
 ];
 
-async function importCompanies() {
-  console.log('Starting company import...');
-  
+async function importCompanies(): Promise<{ imported: number; skipped: number; total: number }> {
   const rawCompanies = companiesData as RawCompany[];
   
   // Filter companies with valid websites
@@ -249,8 +247,6 @@ async function importCompanies() {
     
     return hasValidWebsite && hasValidLocation && hasName;
   });
-  
-  console.log(`Found ${companiesWithWebsites.length} companies with valid websites out of ${rawCompanies.length} total`);
   
   // Track duplicates by name + state
   const seen = new Set<string>();
@@ -265,8 +261,6 @@ async function importCompanies() {
       uniqueCompanies.push(company);
     }
   }
-  
-  console.log(`After removing duplicates: ${uniqueCompanies.length} companies`);
   
   let imported = 0;
   let skipped = 0;
@@ -312,12 +306,10 @@ async function importCompanies() {
     }
   }
   
-  console.log(`Imported ${imported} companies, skipped ${skipped} (already exist)`);
+  return { imported, skipped, total: rawCompanies.length };
 }
 
-async function importDisposalFacilities() {
-  console.log('\nStarting disposal facility import...');
-  
+async function importDisposalFacilities(): Promise<{ imported: number; skipped: number; total: number }> {
   let imported = 0;
   let skipped = 0;
   
@@ -356,43 +348,57 @@ async function importDisposalFacilities() {
     }
   }
   
-  console.log(`Imported ${imported} disposal facilities, skipped ${skipped} (already exist)`);
+  return { imported, skipped, total: disposalFacilities.length };
 }
 
-async function validateImport() {
-  console.log('\nValidating import...');
-  
+async function getStats() {
   const companyCount = await prisma.company.count();
   const facilityCount = await prisma.disposalFacility.count();
   
-  console.log(`Total companies in database: ${companyCount}`);
-  console.log(`Total disposal facilities in database: ${facilityCount}`);
-  
-  // Sample some data
-  const sampleCompanies = await prisma.company.findMany({ take: 5 });
-  console.log('\nSample companies:');
-  sampleCompanies.forEach(c => console.log(`  - ${c.name} (${c.city}, ${c.state})`));
-  
-  const sampleFacilities = await prisma.disposalFacility.findMany({ take: 5 });
-  console.log('\nSample facilities:');
-  sampleFacilities.forEach(f => console.log(`  - ${f.name} (${f.city}, ${f.state})`));
+  return { companyCount, facilityCount };
 }
 
-async function main() {
-  console.log('=== Data Import Script ===\n');
-  
+export async function POST() {
   try {
-    await importCompanies();
-    await importDisposalFacilities();
-    await validateImport();
+    const companiesResult = await importCompanies();
+    const facilitiesResult = await importDisposalFacilities();
+    const stats = await getStats();
     
-    console.log('\n=== Import completed successfully! ===');
+    return NextResponse.json({
+      success: true,
+      companies: {
+        imported: companiesResult.imported,
+        skipped: companiesResult.skipped,
+        totalInFile: companiesResult.total,
+      },
+      facilities: {
+        imported: facilitiesResult.imported,
+        skipped: facilitiesResult.skipped,
+        totalInFile: facilitiesResult.total,
+      },
+      database: {
+        totalCompanies: stats.companyCount,
+        totalFacilities: stats.facilityCount,
+      },
+    });
   } catch (error) {
     console.error('Import failed:', error);
-    process.exit(1);
-  } finally {
-    await prisma.$disconnect();
+    return NextResponse.json({ error: 'Import failed' }, { status: 500 });
   }
 }
 
-main();
+export async function GET() {
+  try {
+    const stats = await getStats();
+    
+    return NextResponse.json({
+      database: {
+        totalCompanies: stats.companyCount,
+        totalFacilities: stats.facilityCount,
+      },
+    });
+  } catch (error) {
+    console.error('Failed to get stats:', error);
+    return NextResponse.json({ error: 'Failed to get stats' }, { status: 500 });
+  }
+}
