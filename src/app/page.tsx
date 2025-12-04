@@ -7,6 +7,7 @@ import MapSection from '@/components/MapSection';
 import Listings from '@/components/Listings';
 import Footer from '@/components/Footer';
 import { FilterType, SearchLocation, SearchRadius, calculateDistanceMiles, HydroVacCompany, DisposalFacility } from '@/types';
+import { DBCompany, DBDisposalFacility, transformCompany, transformFacility } from '@/lib/transforms';
 
 // Extend types with distance for sorting
 interface CompanyWithDistance extends HydroVacCompany {
@@ -15,86 +16,6 @@ interface CompanyWithDistance extends HydroVacCompany {
 
 interface FacilityWithDistance extends DisposalFacility {
   distance?: number;
-}
-
-// Database company type from API
-interface DBCompany {
-  id: number;
-  name: string;
-  city: string;
-  state: string;
-  phone: string | null;
-  website: string | null;
-  tier: string;
-  coverageRadius: number | null;
-  latitude: number | null;
-  longitude: number | null;
-  unionAffiliated: boolean;
-  specialties: string | null;
-}
-
-// Database disposal facility type from API
-interface DBDisposalFacility {
-  id: number;
-  name: string;
-  address: string | null;
-  city: string | null;
-  state: string | null;
-  phone: string | null;
-  hours: string | null;
-  latitude: number | null;
-  longitude: number | null;
-  materialsAccepted: string | null;
-}
-
-// Transform database company to frontend type
-function transformCompany(dbCompany: DBCompany): HydroVacCompany | null {
-  // Skip companies without valid coordinates
-  if (dbCompany.latitude === null || dbCompany.longitude === null) {
-    return null;
-  }
-
-  return {
-    id: String(dbCompany.id),
-    name: dbCompany.name,
-    city: dbCompany.city,
-    state: dbCompany.state,
-    phone: dbCompany.phone || '',
-    website: dbCompany.website || '',
-    serviceSpecialties: dbCompany.specialties ? dbCompany.specialties.split(',').map(s => s.trim()) : ['Hydro Excavation'],
-    coverageRadius: dbCompany.coverageRadius || 100,
-    unionAffiliation: dbCompany.unionAffiliated,
-    tier: dbCompany.tier.toLowerCase() as HydroVacCompany['tier'],
-    latitude: dbCompany.latitude,
-    longitude: dbCompany.longitude,
-    profileViews: 0,
-    clickToCalls: 0,
-    websiteClicks: 0,
-    directionRequests: 0,
-  };
-}
-
-// Transform database facility to frontend type
-function transformFacility(dbFacility: DBDisposalFacility): DisposalFacility | null {
-  // Skip facilities without valid coordinates
-  if (dbFacility.latitude === null || dbFacility.longitude === null) {
-    return null;
-  }
-
-  return {
-    id: String(dbFacility.id),
-    name: dbFacility.name,
-    address: dbFacility.address || '',
-    city: dbFacility.city || '',
-    state: dbFacility.state || '',
-    materialsAccepted: dbFacility.materialsAccepted ? dbFacility.materialsAccepted.split(',').map(s => s.trim()) : [],
-    hours: dbFacility.hours || '',
-    phone: dbFacility.phone || '',
-    tier: 'verified',
-    latitude: dbFacility.latitude,
-    longitude: dbFacility.longitude,
-    clicks: 0,
-  };
 }
 
 export default function Home() {
