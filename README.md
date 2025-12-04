@@ -12,6 +12,7 @@ A Next.js application for finding hydrovac companies and disposal facilities.
 - A Mapbox account with an access token
 - A Stripe account for payment processing
 
+
 ### Setting Up Environment Variables
 
 1. Copy the example environment file:
