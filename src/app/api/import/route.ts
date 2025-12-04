@@ -104,20 +104,22 @@ function isValidUrl(urlString: string | null): boolean {
 }
 
 /**
- * Map tier from JSON to database tier format (lowercase to match frontend expectations)
+ * Map tier from JSON to database tier format.
+ * Database uses capitalized tiers (e.g., 'Basic', 'Verified') to match schema default.
+ * Frontend transforms these to lowercase when displaying.
  */
 function mapTier(tier: string): string {
   switch (tier.toLowerCase()) {
     case 'premium':
-      return 'premium';
+      return 'Premium';
     case 'featured':
-      return 'featured';
+      return 'Featured';
     case 'verified':
-      return 'verified';
+      return 'Verified';
     case 'free':
     case 'basic':
     default:
-      return 'basic';
+      return 'Basic';
   }
 }
 

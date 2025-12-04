@@ -3,7 +3,7 @@
  * to frontend types.
  */
 
-import { HydroVacCompany, DisposalFacility } from '@/types';
+import { HydroVacCompany, DisposalFacility, HydroVacTier } from '@/types';
 
 // Database company type from API
 export interface DBCompany {
@@ -35,6 +35,20 @@ export interface DBDisposalFacility {
   materialsAccepted: string | null;
 }
 
+// Valid tier values for frontend
+const VALID_TIERS: HydroVacTier[] = ['basic', 'verified', 'featured', 'premium'];
+
+/**
+ * Normalize tier from database format to frontend format.
+ * Database uses capitalized tiers (e.g., 'Basic'), frontend uses lowercase (e.g., 'basic').
+ * @param tier Tier value from database
+ * @returns Valid HydroVacTier, defaults to 'basic' if invalid
+ */
+function normalizeTier(tier: string): HydroVacTier {
+  const lowercaseTier = tier.toLowerCase() as HydroVacTier;
+  return VALID_TIERS.includes(lowercaseTier) ? lowercaseTier : 'basic';
+}
+
 /**
  * Transform database company to frontend type
  * @param dbCompany Company from the database API
@@ -58,7 +72,7 @@ export function transformCompany(dbCompany: DBCompany): HydroVacCompany | null {
       : ['Hydro Excavation'],
     coverageRadius: dbCompany.coverageRadius || 100,
     unionAffiliation: dbCompany.unionAffiliated,
-    tier: dbCompany.tier.toLowerCase() as HydroVacCompany['tier'],
+    tier: normalizeTier(dbCompany.tier),
     latitude: dbCompany.latitude,
     longitude: dbCompany.longitude,
     profileViews: 0,
