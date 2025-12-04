@@ -33,6 +33,8 @@ model Company {
   images          CompanyImage[]
 
   @@map("companies")
+  @@unique([name, city, state], name: "company_name_city_state")
+
 }
 
 model CompanyImage {
@@ -73,6 +75,8 @@ model DisposalSlideshow {
   createdAt DateTime @default(now())
 
   @@map("disposal_slideshows")
+  @@unique([name, city, state], name: "company_name_city_state")
+
 }
 
 model StateLandingPage {
