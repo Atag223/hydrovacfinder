@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "prisma:generate": "prisma generate",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "import-data": "npx ts-node --compiler-options '{\"module\":\"commonjs\"}' scripts/import-data.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",

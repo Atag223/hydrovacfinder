@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, Suspense, useEffect } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Navigation from '@/components/Navigation';
@@ -8,9 +8,88 @@ import Footer from '@/components/Footer';
 import Listings from '@/components/Listings';
 import StateCompanyAd from '@/components/StateCompanyAd';
 import StateDisposalSlideshowAd from '@/components/StateDisposalSlideshowAd';
-import { hydroVacCompanies, disposalFacilities } from '@/data/companyData';
-import { FilterType, US_STATES } from '@/types';
+import { FilterType, US_STATES, HydroVacCompany, DisposalFacility } from '@/types';
 import styles from './page.module.css';
+
+// Database company type from API
+interface DBCompany {
+  id: number;
+  name: string;
+  city: string;
+  state: string;
+  phone: string | null;
+  website: string | null;
+  tier: string;
+  coverageRadius: number | null;
+  latitude: number | null;
+  longitude: number | null;
+  unionAffiliated: boolean;
+  specialties: string | null;
+}
+
+// Database disposal facility type from API
+interface DBDisposalFacility {
+  id: number;
+  name: string;
+  address: string | null;
+  city: string | null;
+  state: string | null;
+  phone: string | null;
+  hours: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  materialsAccepted: string | null;
+}
+
+// Transform database company to frontend type
+function transformCompany(dbCompany: DBCompany): HydroVacCompany | null {
+  // Skip companies without valid coordinates
+  if (dbCompany.latitude === null || dbCompany.longitude === null) {
+    return null;
+  }
+
+  return {
+    id: String(dbCompany.id),
+    name: dbCompany.name,
+    city: dbCompany.city,
+    state: dbCompany.state,
+    phone: dbCompany.phone || '',
+    website: dbCompany.website || '',
+    serviceSpecialties: dbCompany.specialties ? dbCompany.specialties.split(',').map(s => s.trim()) : ['Hydro Excavation'],
+    coverageRadius: dbCompany.coverageRadius || 100,
+    unionAffiliation: dbCompany.unionAffiliated,
+    tier: dbCompany.tier.toLowerCase() as HydroVacCompany['tier'],
+    latitude: dbCompany.latitude,
+    longitude: dbCompany.longitude,
+    profileViews: 0,
+    clickToCalls: 0,
+    websiteClicks: 0,
+    directionRequests: 0,
+  };
+}
+
+// Transform database facility to frontend type
+function transformFacility(dbFacility: DBDisposalFacility): DisposalFacility | null {
+  // Skip facilities without valid coordinates
+  if (dbFacility.latitude === null || dbFacility.longitude === null) {
+    return null;
+  }
+
+  return {
+    id: String(dbFacility.id),
+    name: dbFacility.name,
+    address: dbFacility.address || '',
+    city: dbFacility.city || '',
+    state: dbFacility.state || '',
+    materialsAccepted: dbFacility.materialsAccepted ? dbFacility.materialsAccepted.split(',').map(s => s.trim()) : [],
+    hours: dbFacility.hours || '',
+    phone: dbFacility.phone || '',
+    tier: 'verified',
+    latitude: dbFacility.latitude,
+    longitude: dbFacility.longitude,
+    clicks: 0,
+  };
+}
 
 function formatStateName(slug: string): string {
   return slug
@@ -26,19 +105,55 @@ function StatePageContent() {
   const stateName = formatStateName(slug);
   const pageType = searchParams.get('type') as 'hydrovac' | 'disposal' | null;
   const [activeFilter, setActiveFilter] = useState<FilterType>(pageType || 'all');
-
-  // Filter companies and facilities by state
-  const stateCompanies = hydroVacCompanies.filter(
-    company => company.state.toLowerCase() === stateName.toLowerCase()
-  );
-  const stateFacilities = disposalFacilities.filter(
-    facility => facility.state.toLowerCase() === stateName.toLowerCase()
-  );
+  const [stateCompanies, setStateCompanies] = useState<HydroVacCompany[]>([]);
+  const [stateFacilities, setStateFacilities] = useState<DisposalFacility[]>([]);
+  const [loading, setLoading] = useState(true);
 
   // Validate state
   const isValidState = US_STATES.some(
     state => state.toLowerCase() === stateName.toLowerCase()
   );
+
+  // Fetch data from API
+  useEffect(() => {
+    async function fetchData() {
+      if (!isValidState) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const [companiesRes, facilitiesRes] = await Promise.all([
+          fetch('/api/companies'),
+          fetch('/api/disposals'),
+        ]);
+
+        if (companiesRes.ok) {
+          const dbCompanies: DBCompany[] = await companiesRes.json();
+          const transformedCompanies = dbCompanies
+            .map(transformCompany)
+            .filter((c): c is HydroVacCompany => c !== null)
+            .filter(c => c.state.toLowerCase() === stateName.toLowerCase());
+          setStateCompanies(transformedCompanies);
+        }
+
+        if (facilitiesRes.ok) {
+          const dbFacilities: DBDisposalFacility[] = await facilitiesRes.json();
+          const transformedFacilities = dbFacilities
+            .map(transformFacility)
+            .filter((f): f is DisposalFacility => f !== null)
+            .filter(f => f.state.toLowerCase() === stateName.toLowerCase());
+          setStateFacilities(transformedFacilities);
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchData();
+  }, [stateName, isValidState]);
 
   if (!isValidState) {
     return (
@@ -52,6 +167,23 @@ function StatePageContent() {
               ← Back to State Directory
             </Link>
           </div>
+        </main>
+        <Footer />
+      </>
+    );
+  }
+
+  if (loading) {
+    return (
+      <>
+        <Navigation />
+        <main className={styles.main}>
+          <section className={styles.hero}>
+            <div className={styles.heroContent}>
+              <h1 className={styles.title}>Loading...</h1>
+              <p className={styles.subtitle}>Please wait</p>
+            </div>
+          </section>
         </main>
         <Footer />
       </>
