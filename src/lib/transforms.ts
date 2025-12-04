@@ -3,7 +3,7 @@
  * to frontend types.
  */
 
-import { HydroVacCompany, DisposalFacility, HydroVacTier } from '@/types';
+import { HydroVacCompany, DisposalFacility, HydroVacTier, DisposalTier } from '@/types';
 
 // Database company type from API
 export interface DBCompany {
@@ -37,6 +37,9 @@ export interface DBDisposalFacility {
 
 // Valid tier values for frontend
 const VALID_TIERS: HydroVacTier[] = ['basic', 'verified', 'featured', 'premium'];
+
+// Default tier for disposal facilities (only one valid value per DisposalTier type)
+const DISPOSAL_FACILITY_TIER: DisposalTier = 'verified';
 
 /**
  * Normalize tier from database format to frontend format.
@@ -104,7 +107,7 @@ export function transformFacility(dbFacility: DBDisposalFacility): DisposalFacil
       : [],
     hours: dbFacility.hours || '',
     phone: dbFacility.phone || '',
-    tier: 'verified',
+    tier: DISPOSAL_FACILITY_TIER,
     latitude: dbFacility.latitude,
     longitude: dbFacility.longitude,
     clicks: 0,
