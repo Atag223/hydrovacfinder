@@ -1,9 +1,13 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import prisma, { isDatabaseConfigured } from '@/lib/prisma';
 import { isValidUrl } from '@/lib/validation';
 
 // GET all homepage slideshow images
 export async function GET() {
+  if (!isDatabaseConfigured()) {
+    return NextResponse.json([]);
+  }
+
   try {
     const images = await prisma.homepageSlideshowImage.findMany({
       orderBy: { id: 'asc' },
@@ -11,12 +15,19 @@ export async function GET() {
     return NextResponse.json(images);
   } catch (error) {
     console.error('Error fetching homepage slideshow images:', error);
-    return NextResponse.json({ error: 'Failed to fetch slideshow images' }, { status: 500 });
+    return NextResponse.json([]);
   }
 }
 
 // POST create a new homepage slideshow image
 export async function POST(request: Request) {
+  if (!isDatabaseConfigured()) {
+    return NextResponse.json({ 
+      error: 'Database not configured', 
+      message: 'Cannot create slideshow images without a database connection. Please configure DATABASE_URL and DIRECT_URL environment variables.' 
+    }, { status: 503 });
+  }
+
   try {
     const body = await request.json();
 

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import prisma, { isDatabaseConfigured } from '@/lib/prisma';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -12,6 +12,13 @@ interface ValidationErrors {
 
 // GET single company by ID
 export async function GET(request: Request, { params }: RouteParams) {
+  if (!isDatabaseConfigured()) {
+    return NextResponse.json({ 
+      error: 'Database not configured', 
+      message: 'Cannot fetch single company without database connection.' 
+    }, { status: 503 });
+  }
+
   try {
     const { id } = await params;
     const company = await prisma.company.findUnique({
@@ -31,6 +38,13 @@ export async function GET(request: Request, { params }: RouteParams) {
 
 // PUT update company
 export async function PUT(request: Request, { params }: RouteParams) {
+  if (!isDatabaseConfigured()) {
+    return NextResponse.json({ 
+      error: 'Database not configured', 
+      message: 'Cannot update companies without a database connection. Please configure DATABASE_URL and DIRECT_URL environment variables.' 
+    }, { status: 503 });
+  }
+
   try {
     const { id } = await params;
     const body = await request.json();
@@ -94,9 +108,10 @@ export async function PUT(request: Request, { params }: RouteParams) {
         specialties = body.specialties.trim() || null;
       } else if (Array.isArray(body.specialties)) {
         // If it's an array, convert to comma-separated string (filter out non-strings)
-        specialties = body.specialties
-          .filter((s): s is string => typeof s === 'string')
-          .map((s) => s.trim())
+        const specialtiesArray = body.specialties as unknown[];
+        specialties = specialtiesArray
+          .filter((s: unknown): s is string => typeof s === 'string')
+          .map((s: string) => s.trim())
           .filter(Boolean)
           .join(', ') || null;
       }
@@ -128,6 +143,13 @@ export async function PUT(request: Request, { params }: RouteParams) {
 
 // DELETE company
 export async function DELETE(request: Request, { params }: RouteParams) {
+  if (!isDatabaseConfigured()) {
+    return NextResponse.json({ 
+      error: 'Database not configured', 
+      message: 'Cannot delete companies without a database connection. Please configure DATABASE_URL and DIRECT_URL environment variables.' 
+    }, { status: 503 });
+  }
+
   try {
     const { id } = await params;
     await prisma.company.delete({

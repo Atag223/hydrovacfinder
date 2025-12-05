@@ -1,8 +1,95 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import prisma, { isDatabaseConfigured } from '@/lib/prisma';
+import companiesData from '@/data/companies_export.json';
+
+// Transform raw JSON company to database format for fallback
+interface RawCompanyJson {
+  id: number;
+  name: string;
+  address: string;
+  phone: string;
+  email: string;
+  website: string | null;
+  description: string;
+  services: string;
+  coverage_area: string;
+  lat: number | null;
+  lng: number | null;
+  tier: string;
+  logo_url: string | null;
+  created_at: string;
+  is_union: boolean;
+  union_name: string | null;
+}
+
+// State abbreviation to full name mapping
+const STATE_ABBR_TO_NAME: Record<string, string> = {
+  'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas',
+  'CA': 'California', 'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware',
+  'FL': 'Florida', 'GA': 'Georgia', 'HI': 'Hawaii', 'ID': 'Idaho',
+  'IL': 'Illinois', 'IN': 'Indiana', 'IA': 'Iowa', 'KS': 'Kansas',
+  'KY': 'Kentucky', 'LA': 'Louisiana', 'ME': 'Maine', 'MD': 'Maryland',
+  'MA': 'Massachusetts', 'MI': 'Michigan', 'MN': 'Minnesota', 'MS': 'Mississippi',
+  'MO': 'Missouri', 'MT': 'Montana', 'NE': 'Nebraska', 'NV': 'Nevada',
+  'NH': 'New Hampshire', 'NJ': 'New Jersey', 'NM': 'New Mexico', 'NY': 'New York',
+  'NC': 'North Carolina', 'ND': 'North Dakota', 'OH': 'Ohio', 'OK': 'Oklahoma',
+  'OR': 'Oregon', 'PA': 'Pennsylvania', 'RI': 'Rhode Island', 'SC': 'South Carolina',
+  'SD': 'South Dakota', 'TN': 'Tennessee', 'TX': 'Texas', 'UT': 'Utah',
+  'VT': 'Vermont', 'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia',
+  'WI': 'Wisconsin', 'WY': 'Wyoming', 'DC': 'District of Columbia',
+};
+
+function parseCityState(address: string): { city: string; state: string } {
+  if (!address) {
+    return { city: 'Unknown', state: 'Unknown' };
+  }
+  
+  const parts = address.split(',').map(p => p.trim());
+  
+  if (parts.length >= 3) {
+    const city = parts[parts.length - 3] || 'Unknown';
+    const stateZipPart = parts[parts.length - 2] || '';
+    const stateMatch = stateZipPart.match(/^([A-Za-z]{2})/);
+    const stateAbbr = stateMatch ? stateMatch[1].toUpperCase() : '';
+    const state = STATE_ABBR_TO_NAME[stateAbbr] || stateZipPart.split(' ')[0] || 'Unknown';
+    
+    return { city, state };
+  } else if (parts.length === 2) {
+    return { city: parts[0], state: parts[1] };
+  }
+  
+  return { city: 'Unknown', state: 'Unknown' };
+}
+
+function transformJsonToDbFormat(raw: RawCompanyJson) {
+  const { city, state } = parseCityState(raw.address);
+  const tier = raw.tier === 'free' ? 'Basic' : raw.tier.charAt(0).toUpperCase() + raw.tier.slice(1);
+  
+  return {
+    id: raw.id,
+    name: raw.name,
+    city,
+    state,
+    phone: raw.phone || null,
+    website: raw.website || null,
+    tier,
+    coverageRadius: 100,
+    latitude: raw.lat,
+    longitude: raw.lng,
+    unionAffiliated: raw.is_union,
+    specialties: raw.services || null,
+  };
+}
 
 // GET all companies
 export async function GET() {
+  // If database is not configured, return fallback data
+  if (!isDatabaseConfigured()) {
+    console.log('Database not configured, using fallback JSON data');
+    const fallbackCompanies = (companiesData as RawCompanyJson[]).map(transformJsonToDbFormat);
+    return NextResponse.json(fallbackCompanies);
+  }
+
   try {
     const companies = await prisma.company.findMany({
       orderBy: { name: 'asc' },
@@ -10,7 +97,10 @@ export async function GET() {
     return NextResponse.json(companies);
   } catch (error) {
     console.error('Error fetching companies:', error);
-    return NextResponse.json({ error: 'Failed to fetch companies' }, { status: 500 });
+    // Fall back to JSON data if database query fails
+    console.log('Database query failed, using fallback JSON data');
+    const fallbackCompanies = (companiesData as RawCompanyJson[]).map(transformJsonToDbFormat);
+    return NextResponse.json(fallbackCompanies);
   }
 }
 
@@ -21,6 +111,14 @@ interface ValidationErrors {
 
 // POST create a new company
 export async function POST(request: Request) {
+  // Check if database is configured
+  if (!isDatabaseConfigured()) {
+    return NextResponse.json({ 
+      error: 'Database not configured', 
+      message: 'Cannot create companies without a database connection. Please configure DATABASE_URL and DIRECT_URL environment variables.' 
+    }, { status: 503 });
+  }
+
   try {
     const body = await request.json();
 
@@ -83,9 +181,10 @@ export async function POST(request: Request) {
         specialties = body.specialties.trim() || null;
       } else if (Array.isArray(body.specialties)) {
         // If it's an array, convert to comma-separated string (filter out non-strings)
-        specialties = body.specialties
-          .filter((s): s is string => typeof s === 'string')
-          .map((s) => s.trim())
+        const specialtiesArray = body.specialties as unknown[];
+        specialties = specialtiesArray
+          .filter((s: unknown): s is string => typeof s === 'string')
+          .map((s: string) => s.trim())
           .filter(Boolean)
           .join(', ') || null;
       }
