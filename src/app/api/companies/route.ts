@@ -53,8 +53,8 @@ export async function POST(request: Request) {
     }
 
     if (body.coverageRadius !== undefined && body.coverageRadius !== null) {
-      if (typeof body.coverageRadius !== 'number' || !Number.isInteger(body.coverageRadius)) {
-        errors.coverageRadius = 'Coverage radius must be an integer';
+      if (typeof body.coverageRadius !== 'number' || !Number.isInteger(body.coverageRadius) || body.coverageRadius < 0) {
+        errors.coverageRadius = 'Coverage radius must be a non-negative integer';
       }
     }
 
@@ -82,8 +82,12 @@ export async function POST(request: Request) {
         // If it's already a string, store as-is (trim whitespace)
         specialties = body.specialties.trim() || null;
       } else if (Array.isArray(body.specialties)) {
-        // If it's an array, convert to comma-separated string
-        specialties = body.specialties.map((s: string) => s.trim()).filter(Boolean).join(', ') || null;
+        // If it's an array, convert to comma-separated string (filter out non-strings)
+        specialties = body.specialties
+          .filter((s): s is string => typeof s === 'string')
+          .map((s) => s.trim())
+          .filter(Boolean)
+          .join(', ') || null;
       }
     }
 
