@@ -1,9 +1,14 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import prisma, { isDatabaseConfigured } from '@/lib/prisma';
 import { filterValidUrls } from '@/lib/validation';
 
 // GET all state landing pages
 export async function GET() {
+  if (!isDatabaseConfigured()) {
+    // Return empty array - no fallback data for state landing pages
+    return NextResponse.json([]);
+  }
+
   try {
     const pages = await prisma.stateLandingPage.findMany({
       include: { images: true },
@@ -12,12 +17,19 @@ export async function GET() {
     return NextResponse.json(pages);
   } catch (error) {
     console.error('Error fetching state landing pages:', error);
-    return NextResponse.json({ error: 'Failed to fetch state landing pages' }, { status: 500 });
+    return NextResponse.json([], { status: 200 });
   }
 }
 
 // POST create a new state landing page
 export async function POST(request: Request) {
+  if (!isDatabaseConfigured()) {
+    return NextResponse.json({ 
+      error: 'Database not configured', 
+      message: 'Cannot create state landing pages without a database connection. Please configure DATABASE_URL and DIRECT_URL environment variables.' 
+    }, { status: 503 });
+  }
+
   try {
     const body = await request.json();
     const { images, ...pageData } = body;

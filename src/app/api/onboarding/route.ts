@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import prisma, { isDatabaseConfigured } from '@/lib/prisma';
 import Stripe from 'stripe';
 
 // Initialize Stripe
@@ -23,6 +23,14 @@ interface OnboardingRequest {
 }
 
 export async function POST(request: NextRequest) {
+  // Check if database is configured
+  if (!isDatabaseConfigured()) {
+    return NextResponse.json({ 
+      error: 'Database not configured', 
+      message: 'Cannot complete onboarding without a database connection. Please configure DATABASE_URL and DIRECT_URL environment variables.' 
+    }, { status: 503 });
+  }
+
   try {
     const body: OnboardingRequest = await request.json();
     const { 

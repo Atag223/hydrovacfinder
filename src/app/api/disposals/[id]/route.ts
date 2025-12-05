@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import prisma, { isDatabaseConfigured } from '@/lib/prisma';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -7,6 +7,13 @@ interface RouteParams {
 
 // GET single disposal facility by ID
 export async function GET(request: Request, { params }: RouteParams) {
+  if (!isDatabaseConfigured()) {
+    return NextResponse.json({ 
+      error: 'Database not configured', 
+      message: 'Cannot fetch single facility without database connection.' 
+    }, { status: 503 });
+  }
+
   try {
     const { id } = await params;
     const facility = await prisma.disposalFacility.findUnique({
@@ -26,6 +33,13 @@ export async function GET(request: Request, { params }: RouteParams) {
 
 // PUT update disposal facility
 export async function PUT(request: Request, { params }: RouteParams) {
+  if (!isDatabaseConfigured()) {
+    return NextResponse.json({ 
+      error: 'Database not configured', 
+      message: 'Cannot update disposal facilities without a database connection. Please configure DATABASE_URL and DIRECT_URL environment variables.' 
+    }, { status: 503 });
+  }
+
   try {
     const { id } = await params;
     const body = await request.json();
@@ -44,6 +58,13 @@ export async function PUT(request: Request, { params }: RouteParams) {
 
 // DELETE disposal facility
 export async function DELETE(request: Request, { params }: RouteParams) {
+  if (!isDatabaseConfigured()) {
+    return NextResponse.json({ 
+      error: 'Database not configured', 
+      message: 'Cannot delete disposal facilities without a database connection. Please configure DATABASE_URL and DIRECT_URL environment variables.' 
+    }, { status: 503 });
+  }
+
   try {
     const { id } = await params;
     await prisma.disposalFacility.delete({

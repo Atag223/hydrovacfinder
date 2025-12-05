@@ -1,8 +1,19 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import prisma, { isDatabaseConfigured } from '@/lib/prisma';
 
 // GET homepage content (returns first record or creates default)
 export async function GET() {
+  if (!isDatabaseConfigured()) {
+    // Return default homepage content when database is not configured
+    return NextResponse.json({
+      id: 0,
+      heroTitle: 'Find Hydro-Vac Services Near You',
+      heroSubtitle: 'Connect with trusted hydro excavation companies across the nation',
+      mainImage: null,
+      slideshowEnabled: false,
+    });
+  }
+
   try {
     let content = await prisma.homepageContent.findFirst();
     
@@ -20,12 +31,26 @@ export async function GET() {
     return NextResponse.json(content);
   } catch (error) {
     console.error('Error fetching homepage content:', error);
-    return NextResponse.json({ error: 'Failed to fetch homepage content' }, { status: 500 });
+    // Return default content on error
+    return NextResponse.json({
+      id: 0,
+      heroTitle: 'Find Hydro-Vac Services Near You',
+      heroSubtitle: 'Connect with trusted hydro excavation companies across the nation',
+      mainImage: null,
+      slideshowEnabled: false,
+    });
   }
 }
 
 // PUT update homepage content
 export async function PUT(request: Request) {
+  if (!isDatabaseConfigured()) {
+    return NextResponse.json({ 
+      error: 'Database not configured', 
+      message: 'Cannot update homepage content without a database connection. Please configure DATABASE_URL and DIRECT_URL environment variables.' 
+    }, { status: 503 });
+  }
+
   try {
     const body = await request.json();
     

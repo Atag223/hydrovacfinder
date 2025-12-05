@@ -11,6 +11,7 @@ A Next.js application for finding hydrovac companies and disposal facilities.
 - npm or yarn
 - A Mapbox account with an access token
 - A Stripe account for payment processing
+- (Optional) A Supabase/PostgreSQL database for persistent data storage
 
 
 ### Setting Up Environment Variables
@@ -32,13 +33,29 @@ A Next.js application for finding hydrovac companies and disposal facilities.
    - For development, use test keys (`pk_test_...` and `sk_test_...`)
    - For production, use live keys (`pk_live_...` and `sk_live_...`)
 
-4. Update `.env.local` with your credentials:
+4. **(Optional but Recommended)** Set up Supabase for database storage:
+   - Sign up or log in at [Supabase](https://supabase.com/)
+   - Create a new project
+   - Go to **Settings** > **Database**
+   - Copy the connection strings and add them to `.env.local`:
+     ```
+     DATABASE_URL=postgresql://postgres:your_password@db.your_project.supabase.co:5432/postgres
+     DIRECT_URL=postgresql://postgres:your_password@db.your_project.supabase.co:5432/postgres
+     ```
+   - Run database migrations:
+     ```bash
+     npm run prisma:migrate
+     ```
+
+5. Update `.env.local` with your credentials:
    ```
    NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN=your_actual_mapbox_token_here
    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_your_publishable_key_here
    STRIPE_SECRET_KEY=sk_test_your_secret_key_here
    STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret_here
    ```
+
+> **Note:** The application will work without a database by using fallback static data for viewing companies and facilities. However, to add, edit, or delete companies through the admin panel, you must configure the database connection.
 
 ### Setting Up Stripe Webhooks
 
@@ -118,6 +135,26 @@ If webhooks are failing:
 1. Verify `STRIPE_WEBHOOK_SECRET` is correctly set
 2. For local development, ensure the Stripe CLI is running
 3. For production, verify the webhook URL is correctly configured in Stripe Dashboard
+
+### "Database not configured" Error
+
+If you see this error when trying to add, edit, or delete companies/facilities:
+
+1. The application requires a database connection for write operations
+2. Set up Supabase by following the "Setting Up Environment Variables" section above
+3. Ensure both `DATABASE_URL` and `DIRECT_URL` are set in your `.env.local` file
+4. Run `npm run prisma:migrate` to set up the database tables
+5. Restart the development server
+
+**Note:** The application will still display companies and facilities using fallback static data even without a database, but you won't be able to modify the data.
+
+### Admin Panel Shows Read-Only Data
+
+If the admin panel shows data but you can't make changes:
+
+1. This is expected behavior when the database is not configured
+2. The app uses static JSON data as a fallback for viewing
+3. To enable editing, configure the Supabase database as described above
 
 ## Deploying to Vercel with Custom Domain (hydrovacfinder.com)
 

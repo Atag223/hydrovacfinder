@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import prisma, { isDatabaseConfigured } from '@/lib/prisma';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -7,6 +7,13 @@ interface RouteParams {
 
 // DELETE homepage slideshow image
 export async function DELETE(request: Request, { params }: RouteParams) {
+  if (!isDatabaseConfigured()) {
+    return NextResponse.json({ 
+      error: 'Database not configured', 
+      message: 'Cannot delete slideshow images without a database connection. Please configure DATABASE_URL and DIRECT_URL environment variables.' 
+    }, { status: 503 });
+  }
+
   try {
     const { id } = await params;
     await prisma.homepageSlideshowImage.delete({

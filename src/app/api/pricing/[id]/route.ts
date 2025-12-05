@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import prisma, { isDatabaseConfigured } from '@/lib/prisma';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -7,6 +7,13 @@ interface RouteParams {
 
 // GET single pricing tier by ID
 export async function GET(request: Request, { params }: RouteParams) {
+  if (!isDatabaseConfigured()) {
+    return NextResponse.json({ 
+      error: 'Database not configured', 
+      message: 'Cannot fetch pricing tier without database connection.' 
+    }, { status: 503 });
+  }
+
   try {
     const { id } = await params;
     const tier = await prisma.pricingTier.findUnique({
@@ -26,6 +33,13 @@ export async function GET(request: Request, { params }: RouteParams) {
 
 // PUT update pricing tier
 export async function PUT(request: Request, { params }: RouteParams) {
+  if (!isDatabaseConfigured()) {
+    return NextResponse.json({ 
+      error: 'Database not configured', 
+      message: 'Cannot update pricing tiers without a database connection. Please configure DATABASE_URL and DIRECT_URL environment variables.' 
+    }, { status: 503 });
+  }
+
   try {
     const { id } = await params;
     const body = await request.json();
@@ -44,6 +58,13 @@ export async function PUT(request: Request, { params }: RouteParams) {
 
 // DELETE pricing tier
 export async function DELETE(request: Request, { params }: RouteParams) {
+  if (!isDatabaseConfigured()) {
+    return NextResponse.json({ 
+      error: 'Database not configured', 
+      message: 'Cannot delete pricing tiers without a database connection. Please configure DATABASE_URL and DIRECT_URL environment variables.' 
+    }, { status: 503 });
+  }
+
   try {
     const { id } = await params;
     await prisma.pricingTier.delete({
