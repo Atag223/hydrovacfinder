@@ -181,10 +181,9 @@ export async function POST(request: Request) {
         specialties = body.specialties.trim() || null;
       } else if (Array.isArray(body.specialties)) {
         // If it's an array, convert to comma-separated string (filter out non-strings)
-        const specialtiesArray = body.specialties as unknown[];
-        specialties = specialtiesArray
-          .filter((s: unknown): s is string => typeof s === 'string')
-          .map((s: string) => s.trim())
+        specialties = (body.specialties as string[])
+          .filter((s) => typeof s === 'string')
+          .map((s) => s.trim())
           .filter(Boolean)
           .join(', ') || null;
       }
