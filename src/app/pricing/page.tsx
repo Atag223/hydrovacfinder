@@ -40,8 +40,9 @@ export default function PricingPage() {
   };
 
   const handleStateLandingCheckout = (planKey: string) => {
-    // For now, route to the state-company checkout
-    // In the future, this could be customized per tier
+    // TODO: Enhance checkout to handle different state landing tiers
+    // For now, route to the state-company checkout with plan parameter
+    // Backend enhancement needed to differentiate between tier purchases
     router.push(`/checkout/state-company?plan=${planKey}`);
   };
 
