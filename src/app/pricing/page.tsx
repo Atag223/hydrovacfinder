@@ -10,6 +10,7 @@ import {
   hydrovacPackages,
   stateOwnership,
   disposalPackage,
+  stateLandingTiers,
   coverageOptions,
   type CoverageLevel,
   type ListingTier,
@@ -20,6 +21,7 @@ export default function PricingPage() {
   const [isReferralFormOpen, setIsReferralFormOpen] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
   const [selectedCoverage, setSelectedCoverage] = useState<CoverageLevel>('1-state');
+  const [selectedStateLandingPlan, setSelectedStateLandingPlan] = useState<string | null>(null);
 
   const handleHydrovacCheckout = (tier: ListingTier) => {
     const params = new URLSearchParams({
@@ -35,6 +37,12 @@ export default function PricingPage() {
 
   const handleDisposalCheckout = () => {
     router.push('/checkout/state-disposal');
+  };
+
+  const handleStateLandingCheckout = (planKey: string) => {
+    // For now, route to the state-company checkout
+    // In the future, this could be customized per tier
+    router.push(`/checkout/state-company?plan=${planKey}`);
   };
 
   return (
@@ -210,6 +218,52 @@ export default function PricingPage() {
           </div>
         </section>
 
+        {/* State Landing Page Tiers */}
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>State Landing Page Features</h2>
+          <div className={styles.pricingGrid}>
+            {stateLandingTiers.map((tier) => {
+              const isSelected = selectedStateLandingPlan === tier.planKey;
+              return (
+                <div 
+                  key={tier.planKey}
+                  className={`${styles.pricingCard} ${isSelected ? styles.selected : ''}`}
+                  onClick={() => setSelectedStateLandingPlan(tier.planKey)}
+                >
+                  <div className={styles.cardHeader}>
+                    <h3 className={styles.planName}>{tier.name}</h3>
+                  </div>
+                  <div className={styles.pricing}>
+                    <div className={styles.priceRow}>
+                      <span className={styles.price}>${tier.yearlyPrice.toLocaleString()}</span>
+                      <span className={styles.period}>/year</span>
+                    </div>
+                  </div>
+                  <ul className={styles.features}>
+                    {tier.features.map((feature, index) => (
+                      <li key={index} className={styles.feature}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+                  <button 
+                    className={styles.ctaButton}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleStateLandingCheckout(tier.planKey);
+                    }}
+                  >
+                    Get Started
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
         {/* Disposal Facility Package */}
         <section className={styles.section}>
           <h2 className={styles.sectionTitle}>Disposal Facility Package</h2>
@@ -238,7 +292,7 @@ export default function PricingPage() {
                   className={styles.ctaButtonGreen}
                   onClick={handleDisposalCheckout}
                 >
-                  List Your Facility
+                  Click to list
                 </button>
               </div>
             </div>

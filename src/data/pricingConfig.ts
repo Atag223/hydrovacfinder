@@ -149,6 +149,66 @@ export const disposalPackage = {
   ],
 };
 
+// State Landing Page Tier Interface
+export interface StateLandingTier {
+  planKey: string;
+  name: string;
+  yearlyPrice: number;
+  features: string[];
+}
+
+// State Landing Page Tiers
+// Add stripePriceIdAnnual when integrating Stripe
+export const stateLandingTiers: StateLandingTier[] = [
+  {
+    planKey: 'verified_1_state',
+    name: 'HydroVac State Landing Page',
+    yearlyPrice: 1200,
+    features: [
+      'Featured on one state landing page',
+      'Company logo display',
+      'Direct contact information',
+      'Priority placement',
+    ],
+  },
+  {
+    planKey: 'verified_2_state',
+    name: 'Secondary State Landing Page',
+    yearlyPrice: 2000,
+    features: [
+      'Featured on two state landing pages',
+      'Company logo display',
+      'Direct contact information',
+      'Priority placement',
+      'Multi-state visibility',
+    ],
+  },
+  {
+    planKey: 'verified_3_state',
+    name: 'Tertiary State Landing Page',
+    yearlyPrice: 2700,
+    features: [
+      'Featured on three state landing pages',
+      'Company logo display',
+      'Direct contact information',
+      'Priority placement',
+      'Extended regional coverage',
+    ],
+  },
+  {
+    planKey: 'verified_4_state',
+    name: 'Quaternary State Landing Page',
+    yearlyPrice: 3300,
+    features: [
+      'Featured on four state landing pages',
+      'Company logo display',
+      'Direct contact information',
+      'Priority placement',
+      'Maximum regional exposure',
+    ],
+  },
+];
+
 // Helper function to get pricing for a specific package and coverage
 export function getPricing(tier: ListingTier, coverage: CoverageLevel): PricingTier {
   const pkg = hydrovacPackages.find((p) => p.tier === tier);
